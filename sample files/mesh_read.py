@@ -263,8 +263,8 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
 #####################################################################################################################
 
 
-coarse = read_abaqus('voidRatio.csv')
-fine = read_pace3d('pressure_2D_sample.dat')
+coarse = read_abaqus('abaqus_voidRatio.csv')
+fine = read_pace3d('pace3d_pressure_2D_sample.dat')
 
 print(type(fine[0]))
 
