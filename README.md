@@ -5,6 +5,8 @@ Two data sets are needed:
 1. Abaqus data: node_number | x | y | z | values (delimiter: \tab)
 1. Pace3D data: x | y | z | values (delimiter: space)
 
+**Important: Both node_sets need to have the same point or origin!**
+
 It is possible to convert the data from Abaqus to Pace3D and vice versa. The values will be transferred by using the [`scipy.interpolate.griddata()`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html) function which uses a qhull. It uses the coordinates from the mesh and the grid to make a liner interpolation to fill the values. If a linear interpolation is not possible (e.g. the coordinates are outside the input hull) the nearest neighbor will be used.
 
 Functions:
