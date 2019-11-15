@@ -1,6 +1,7 @@
 import csv
 import numpy
 import sys
+import os
 
 from scipy.interpolate import griddata  # used for mesh transformation
 import matplotlib.pyplot as plt  # used for visualisation of transformation validation
@@ -8,11 +9,11 @@ import matplotlib.pyplot as plt  # used for visualisation of transformation vali
 #####################################################################################################################
 
 
-def read_pace3d(filename, path=''):
+def read_pace3d(file_name, path=''):
     """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
      Parameters:
-        filename (str): filename including filetype (e.g. data.dat)
+        file_name (str): filename including filetype (e.g. data.dat)
         path (str), optional: path to the file
 
     Returns:
@@ -24,17 +25,21 @@ def read_pace3d(filename, path=''):
 
     try:
         # Replace backslashes by slashes
-        path.replace("\\", "/")
+        path = path.replace("\\", "/")
 
-        # Check wheter ther is a path or only a filename handed over
+        # Check wheter there is a path or only a filename handed over
         if path != '':
-            filepath = path + '/' + filename
+            file_path = path + '/' + file_name
         else:
-            filepath = filename
+            file_path = file_name
 
-        print(print_pre_str, 'Load Pace3D-File: ', filepath)
+        # Check if file exists
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError
 
-        with open(filepath) as csvfile:
+        print(print_pre_str, 'Load Pace3D-File: ', file_path)
+
+        with open(file_path) as csvfile:
             read_csv = csv.reader(csvfile, delimiter=' ')
 
             x = []
@@ -56,10 +61,10 @@ def read_pace3d(filename, path=''):
 
             return numpy.array([x, y, z, data_set])
     except Exception as err:
-        print(print_pre_str, 'File --', filename, '-- could not be read correctly')
+        print(print_pre_str, 'File --', file_name, '-- could not be read correctly')
         print('* ERROR in function: ', function_name, ' [', str(err), ']')
         print()
-        return 0
+        return -1
 
     finally:
         print(print_pre_str, 'exiting function')
@@ -69,11 +74,11 @@ def read_pace3d(filename, path=''):
 #####################################################################################################################
 
 
-def read_abaqus(filename, path=''):
+def read_abaqus(file_name, path=''):
     """ Function to read an csv-file-export from the Software Simulia Abaqus
 
      Parameters:
-        filename (str): filename including filetype (e.g. data.dat)
+        file_name (str): filename including filetype (e.g. data.dat)
         path (str), optional: path to the file
 
     Returns:
@@ -86,18 +91,22 @@ def read_abaqus(filename, path=''):
 
     try:
         # Replace backslashes by slashes
-        path.replace("\\", "/")
+        path = path.replace("\\", "/")
 
-        # Check wheter ther is a path or only a filename handed over
+        # Check wheter there is a path or only a filename handed over
         if path != '':
-            filepath = path + '/' + filename
+            file_path = path + '/' + file_name
         else:
-            filepath = filename
+            file_path = file_name
 
-        print(print_pre_str, 'Load Abaqus-Mesh-File: ', filepath)
+        #Check if file exists
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError
 
-        with open(filepath) as csvfile:
-            read_csv = csv.reader(csvfile, delimiter='\t')
+        print(print_pre_str, 'Load Abaqus-Mesh-File: ', file_path)
+
+        with open(file_path) as csvfile:
+            read_csv = csv.reader(csvfile, delimiter=',')
 
             x = []
             y = []
@@ -106,23 +115,27 @@ def read_abaqus(filename, path=''):
 
             for row in read_csv:
                 try:
-                    x.append(float(row[1]))
-                    y.append(float(row[2]))
-                    z.append(float(row[3]))
-                    data_set.append(float(row[4]))
+                    if len(row) == 4:
+                        x.append(float(row[0]))
+                        y.append(float(row[1]))
+                        z.append(float(row[2]))
+                        data_set.append(float(row[3]))
+
+                    if len(row) != 4:
+                        print(print_pre_str, 'To many or less columns. Continue...')
 
                 except Exception as err:
-                    print(print_pre_str, 'Empty row found and ignored. Continue... [', str(err), ']')
+                    print(print_pre_str, 'Empty row found or transition failed. Continue... [', str(err), ']')
 
-            print(print_pre_str, len(data_set), ' rows read successfully')
+            print(print_pre_str, len(x), ' rows read successfully')
 
             return numpy.array([x, y, z, data_set])
 
     except Exception as err:
-        print(print_pre_str, 'File --', filename, '-- could not be read correctly')
+        print(print_pre_str, 'File --', file_name, '-- could not be read correctly')
         print('* ERROR in function: ', function_name, ' [', str(err), ']')
         print()
-        return 0
+        return -1
 
     finally:
         print(print_pre_str, 'exiting function')
@@ -132,6 +145,99 @@ def read_abaqus(filename, path=''):
 #####################################################################################################################
 #####################################################################################################################
 
+def write_abaqus(data, file_name, path=''):
+    """ Function to write an csv-file-input from a given ndarray for the Software Simulia Abaqus
+
+     Parameters:
+        data (ndarray): dataset
+        file_name (str): filename including filetype (e.g. data.dat)
+        path (str), optional: path to the file
+
+    Returns:
+        boolean
+    """
+
+    function_name = 'write_abaqus'
+    print_pre_str = '\t' + function_name + ' >> '
+    print('* Start function: ', function_name)
+
+    try:
+        # Replace backslashes by slashes
+        path.replace("\\", "/")
+
+        # Check whether there is a path or only a filename handed over
+        if path != '':
+            file_path = path + '/' + file_name
+        else:
+            file_path = file_name
+
+        print(print_pre_str, 'Write Abaqus-data-file: ', file_path)
+
+        # Writing data to csv-file
+        numpy.savetxt(file_path, data, delimiter=',', fmt='%11.8s')
+
+        return 0
+
+    except Exception as err:
+        print(print_pre_str, 'Writing data in  --', file_name, '-- not successful.')
+        print('* ERROR in function: ', function_name, ' [', str(err), ']')
+        print()
+        return -1
+
+    finally:
+        print(print_pre_str, 'exiting function')
+        print()
+
+
+#####################################################################################################################
+#####################################################################################################################
+
+def write_pace3D(data, file_name, path=''):
+    """ Function to write an csv-file-input from a given ndarray for the Software Pace3D
+
+     Parameters:
+        data (ndarray): dataset
+        file_name (str): filename including filetype (e.g. data.dat)
+        path (str), optional: path to the file
+
+    Returns:
+        boolean
+    """
+
+    function_name = 'write_pace3D'
+    print_pre_str = '\t' + function_name + ' >> '
+    print('* Start function: ', function_name)
+
+    try:
+        # Replace backslashes by slashes
+        path.replace("\\", "/")
+
+        # Check wheter there is a path or only a filename handed over
+        if path != '':
+            file_path = path + '/' + file_name
+        else:
+            file_path = file_name
+
+        print(print_pre_str, 'Write pace3D-data-file: ', file_path)
+
+        # Writing data to csv-file
+        numpy.savetxt(file_path, data, delimiter=' ', fmt='%i %i %f')
+
+        return 0
+
+    except Exception as err:
+        print(print_pre_str, 'Writing data in  --', file_name, '-- not successful.')
+        print('* ERROR in function: ', function_name, ' [', str(err), ']')
+        print()
+        return -1
+
+    finally:
+        print(print_pre_str, 'exiting function')
+        print()
+
+
+#####################################################################################################################
+#####################################################################################################################
 
 def transformation_validation(input_mesh, output_mesh, input_data):
     """ Validating the method of transferring data from one mesh to another We have two different meshes (one is
@@ -216,6 +322,9 @@ def transformation_validation(input_mesh, output_mesh, input_data):
 
         # function to show the plot
         plt.show()
+
+        return 0
+
     except Exception as err:
         sys.exit(print_pre_str + 'ERROR: ' + str(err) + '\nExecution aborted!')
 
