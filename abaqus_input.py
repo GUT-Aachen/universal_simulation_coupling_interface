@@ -1,6 +1,6 @@
 import numpy
 import os
-import logging as log
+import logging
 
 from scipy.interpolate import griddata  # used for mesh transformation
 import matplotlib.pyplot as plt  # used for visualisation of transformation validation
@@ -20,10 +20,13 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
     Returns:
         bc_dict
     """
+
     function_name = 'create_boundary_condition'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
-    if (bc2 == 0):
+    log = logging.getLogger(__main__ + '.' + function_name)  # Define a logger
+    # print_pre_str = '\t' + function_name + ' >> '
+    log.debug('Start function')
+    # print('* Start function: ', function_name)
+    if bc2 == 0:
         bc2 = bc1
 
     bc_dict = {}
@@ -43,13 +46,15 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
         return bc_dict
 
     except Exception as err:
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error(str(err))
+        # print('* ERROR in function: ', function_name, ' [', str(err), ']')
+        # print()
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
+        # print(print_pre_str, 'exiting function')
+        # print()
 
 
 #####################################################################################################################

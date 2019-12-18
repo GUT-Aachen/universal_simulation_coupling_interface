@@ -1,15 +1,20 @@
 import numpy
 import mesh_transition as mt
-import random_mesh_input as rand
+import random_mesh_input as randH
 
 # Load Abaqus and Pace3D Files into arrays
 abaqus_data = mt.read_abaqus('abaqus_void-ratio.csv', '')  # Abaqus mesh original
-pace3d_data = mt.read_pace3d('pace3d_pressure_2D_sample.dat', '')  # Pace3D dataset
+pace3d_data = mt.read_pace3d('pressure_iterationOne.dat', '')  # Pace3D dataset
 
 # Parameters for transition
-mesh_in = numpy.array([abaqus_data[0], abaqus_data[1]])
-mesh_out = numpy.array([pace3d_data[0], pace3d_data[1]])
-data_in = abaqus_data[3]
+# mesh_in = numpy.array([abaqus_data[0], abaqus_data[1]])
+# mesh_out = numpy.array([pace3d_data[0], pace3d_data[1]])
+# data_in = abaqus_data[3]
+
+# Parameters for transition vice versa
+mesh_out = numpy.array([abaqus_data[0], abaqus_data[1]])
+mesh_in = numpy.array([pace3d_data[0], pace3d_data[1]])
+data_in = pace3d_data[3]
 
 # Transferring data from Abaqus mesh to Pace3d grid and export to csv
 data = mt.mesh_transformation(mesh_in, mesh_out, data_in)
