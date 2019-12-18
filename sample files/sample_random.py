@@ -1,6 +1,27 @@
 import numpy
 import mesh_transition as mt
 import random_mesh_input as rand
+import logging
+import sys
+
+import logging
+import sys
+
+# #################################################################################
+# Initialize the logger: logging class
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M',
+                    filename='log.txt',
+                    filemode='w')
+
+# Define a handler writing INFO messages or higher to sys.stderr
+consoleLogger = logging.StreamHandler(sys.stdout)
+consoleLogger.setLevel(logging.INFO)
+# Set a format which is simpler for console use
+format = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+consoleLogger.setFormatter(format)
+logging.getLogger('').addHandler(consoleLogger)  # Add handler to root logger
 
 # Load Abaqus and Pace3D Files into arrays
 abaqus_data = mt.read_abaqus('abaqus_pore-pressure.csv', '')  # Abaqus data

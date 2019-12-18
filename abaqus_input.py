@@ -22,10 +22,9 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
     """
 
     function_name = 'create_boundary_condition'
-    log = logging.getLogger(__main__ + '.' + function_name)  # Define a logger
-    # print_pre_str = '\t' + function_name + ' >> '
+    log = logging.getLogger('abaqus_input.py.' + function_name)
     log.debug('Start function')
-    # print('* Start function: ', function_name)
+
     if bc2 == 0:
         bc2 = bc1
 
@@ -47,14 +46,10 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
 
     except Exception as err:
         log.error(str(err))
-        # print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        # print()
         return -1
 
     finally:
         log.debug('Exit function')
-        # print(print_pre_str, 'exiting function')
-        # print()
 
 
 #####################################################################################################################
@@ -72,8 +67,8 @@ def create_nodesets_all_list(nset_dict, part_name):
     """
 
     function_name = 'create_nodesets_all_list'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log.debug('Start function')
 
     nset_list = {}
 
@@ -89,13 +84,11 @@ def create_nodesets_all_list(nset_dict, part_name):
         return nset_list
 
     except Exception as err:
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error(str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -113,8 +106,8 @@ def create_nodesets_all(nodes, bc_name):
     """
 
     function_name = 'create_nodesets_all'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log.debug('Start function')
 
     nodes = nodes.astype(int)
 
@@ -132,13 +125,11 @@ def create_nodesets_all(nodes, bc_name):
         return nset_dict
 
     except Exception as err:
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error(str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -156,8 +147,8 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
     """
 
     function_name = 'write_inputfile'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log.debug('Start function')
 
     try:
         # Replace backslashes by slashes
@@ -193,13 +184,11 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
         return output_file
 
     except Exception as err:
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error(str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -217,8 +206,8 @@ def write_bashfile_windows(output_path, param_input, param_job, param_user, para
     """
 
     function_name = 'write_inputfile'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log.debug('Start function')
 
     try:
         # Replace backslashes by slashes
@@ -244,13 +233,11 @@ def write_bashfile_windows(output_path, param_input, param_job, param_user, para
         return bash_file_name
 
     except Exception as err:
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error(str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -289,8 +276,8 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
     """
 
     function_name = 'write_inputfile_restart'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log.debug('Start function')
 
     try:
         # Replace backslashes by slashes
@@ -370,13 +357,11 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
         return output_file
 
     except Exception as err:
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error(str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 #####################################################################################################################
 

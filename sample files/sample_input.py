@@ -4,6 +4,7 @@ import random_mesh_input as rand
 import abaqus_input as inp
 import shutil
 import os
+import sys
 import subprocess
 import logging
 
@@ -14,7 +15,7 @@ abaqus_input_file_name = 'Cube_PP_SubR.inp'
 abaqus_subroutine_file_name = 'subroutine_export.f'
 abaqus_mesh_file_name = 'abaqus_matrix.csv'
 abaqus_pore_pressure_file_name = 'abaqus_pore-pressure.csv'
-number_of_iterations = 40
+number_of_iterations = 4
 
 # Logfile name will be saved in 'abaqus_work_path'
 log_file_name = abaqus_job_name + '.log'
@@ -36,13 +37,13 @@ logging.basicConfig(level=logging.DEBUG,
                     filemode='w')
 
 # Define a handler writing INFO messages or higher to sys.stderr
-consoleLogger = logging.StreamHandler()
+consoleLogger = logging.StreamHandler(sys.stdout)
 consoleLogger.setLevel(logging.INFO)
 # Set a format which is simpler for console use
 format = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 consoleLogger.setFormatter(format)
 logging.getLogger('').addHandler(consoleLogger)  # Add handler to root logger
-log = logging.getLogger(__main__ + '.main')  # Define a logger for __main__ file
+log = logging.getLogger('sample' + '.main')  # Define a logger for __main__ file
 
 # Log environmental variables
 log.debug('abaqus_work_path: %s', abaqus_work_path)
@@ -58,7 +59,7 @@ log.info('number_of_iterations: %s', number_of_iterations)
 # Clean up process for folder
 if os.path.exists(abaqus_output_path):
     log.info('* Cleanup process: Deleting output folder')
-    log.info('Folder: ', abaqus_output_path)
+    log.info('Folder: %s', abaqus_output_path)
     shutil.rmtree(abaqus_output_path)
 
 # Preparing first iteration
@@ -67,6 +68,8 @@ log.info('Preparing first iterations')
 current_input_file = ''  # Initiate variable for current input file
 iteration_cnt = 0  # Initiate iteration counter
 subfolder = '/step_' + str(iteration_cnt)  # Set current subfolder path
+
+log.info('Start Iteration No. %d', iteration_cnt)
 
 # Load Abaqus (and Pace3D) files into ndArrays
 abaqus_mesh = mt.read_abaqus(abaqus_mesh_file_name, abaqus_input_path)  # Abaqus mesh original - X|Y|Z|NODES
@@ -102,12 +105,15 @@ log.info('Start Simulia Abaqus simulation')
 current_bash_file_win = current_bash_file.replace('/', '\\')  # Is this necessary? Shall be managed elsewhere
 subprocess.call(current_bash_file_win, shell=True, cwd=current_job_folder) # Start simulation in shell
 log.info('End Simulia Abaqus simulation')
+log.info('End Iteration No. %d', iteration_cnt)
 
 # #################################################################################
 # Next Iteration
 for x in range(0, number_of_iterations):
     # Preparing simulation iteration
     iteration_cnt += 1  # Increment iteration number
+    log.info('Start Iteration No. %d', iteration_cnt)
+
     subfolder = '/step_' + str(iteration_cnt)  # subfolder for iteration
     step_name = 'Step_PPChange_' + str(iteration_cnt)  # step name
     log.info('Preparing simulation step: %s', step_name)
@@ -157,7 +163,7 @@ for x in range(0, number_of_iterations):
 
     # Transition
     log.info('Data transition from mesh_in to mesh_out')
-    data_rand = mt.mesh_transformation(mesh_in, mesh_out, data_in_rand)
+    # data_rand = mt.mesh_transformation(mesh_in, mesh_out, data_in_rand)
 
     # Prepare Abaqus input-file (see above)
     log.info('Prepare Abaqus input-file')
@@ -185,3 +191,5 @@ for x in range(0, number_of_iterations):
             if prev_job_name in filename:
                 os.remove(current_job_folder + '/' + filename)
                 log.info('File removed: %s', filename)
+
+    log.info('End Iteration No. %d', iteration_cnt)

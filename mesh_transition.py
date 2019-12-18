@@ -2,6 +2,7 @@ import csv
 import numpy
 import sys
 import os
+import logging
 
 from scipy.interpolate import griddata  # used for mesh transformation
 import matplotlib.pyplot as plt  # used for visualisation of transformation validation
@@ -20,8 +21,8 @@ def read_pace3d(file_name, path=''):
         ndarray
     """
     function_name = 'read_pace3d'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log.debug('Start function')
 
     try:
         # Replace backslashes by slashes
@@ -37,7 +38,7 @@ def read_pace3d(file_name, path=''):
         if not os.path.isfile(file_path):
             raise FileNotFoundError
 
-        print(print_pre_str, 'Load Pace3D-File: ', file_path)
+        log.info('Load Pace3D-File: %s', file_path)
 
         with open(file_path) as csvfile:
             read_csv = csv.reader(csvfile, delimiter=' ')
@@ -55,20 +56,18 @@ def read_pace3d(file_name, path=''):
                     data_set.append(float(row[3]))
 
                 except Exception as err:
-                    print(print_pre_str, 'Empty row found and ignored. Continue... [', str(err), ']')
+                    log.info('Empty row found and ignored. Continue... [%s]', str(err))
 
-            print(print_pre_str, len(data_set), ' rows read successfully')
+            log.info('%s rows read successfully', len(data_set))
 
             return numpy.array([x, y, z, data_set])
+
     except Exception as err:
-        print(print_pre_str, 'File --', file_name, '-- could not be read correctly')
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error('File --%s-- could not be read correctly [%s]', file_name, str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -86,8 +85,8 @@ def read_abaqus(file_name, path=''):
     """
 
     function_name = 'read_abaqus'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log.debug('Start function')
 
     try:
         # Replace backslashes by slashes
@@ -103,7 +102,7 @@ def read_abaqus(file_name, path=''):
         if not os.path.isfile(file_path):
             raise FileNotFoundError
 
-        print(print_pre_str, 'Load Abaqus-Mesh-File: ', file_path)
+        log.info('Load Abaqus-Mesh-File: %s', file_path)
 
         with open(file_path) as csvfile:
             read_csv = csv.reader(csvfile, delimiter=',')
@@ -122,24 +121,21 @@ def read_abaqus(file_name, path=''):
                         data_set.append(float(row[3]))
 
                     if len(row) != 4:
-                        print(print_pre_str, 'To many or less columns. Continue...')
+                        log.info('Empty row found or transition failed. Continue...')
 
                 except Exception as err:
-                    print(print_pre_str, 'Empty row found or transition failed. Continue... [', str(err), ']')
+                    log.warning('Empty row found or transition failed. Continue... [%s]', str(err))
 
-            print(print_pre_str, len(x), ' rows read successfully')
+            log.debug('%d rows read successfully', len(x))
 
             return numpy.array([x, y, z, data_set])
 
     except Exception as err:
-        print(print_pre_str, 'File --', file_name, '-- could not be read correctly')
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error('File --%s-- could not be read correctly [%s]', file_name, str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -158,8 +154,8 @@ def write_abaqus(data, file_name, path=''):
     """
 
     function_name = 'write_abaqus'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log.debug('Start function')
 
     try:
         # Replace backslashes by slashes
@@ -171,7 +167,7 @@ def write_abaqus(data, file_name, path=''):
         else:
             file_path = file_name
 
-        print(print_pre_str, 'Write Abaqus-data-file: ', file_path)
+        log.info('Write Abaqus-data-file: %s', file_path)
 
         # Writing data to csv-file
         numpy.savetxt(file_path, data, delimiter=',', fmt='%11.8s')
@@ -179,14 +175,11 @@ def write_abaqus(data, file_name, path=''):
         return 0
 
     except Exception as err:
-        print(print_pre_str, 'Writing data in  --', file_name, '-- not successful.')
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error('Writing data in  --%s-- not successful. [%s]', file_name, str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -205,8 +198,8 @@ def write_pace3D(data, file_name, path=''):
     """
 
     function_name = 'write_pace3D'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
+    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log.debug('Start function')
 
     try:
         # Replace backslashes by slashes
@@ -218,7 +211,7 @@ def write_pace3D(data, file_name, path=''):
         else:
             file_path = file_name
 
-        print(print_pre_str, 'Write pace3D-data-file: ', file_path)
+        log.info('Write pace3D-data-file: %s', file_path)
 
         # Writing data to csv-file
         numpy.savetxt(file_path, data, delimiter=' ', fmt='%i %i %f')
@@ -226,14 +219,11 @@ def write_pace3D(data, file_name, path=''):
         return 0
 
     except Exception as err:
-        print(print_pre_str, 'Writing data in  --', file_name, '-- not successful.')
-        print('* ERROR in function: ', function_name, ' [', str(err), ']')
-        print()
+        log.error('Writing data in  --%s-- not successful. [%s]', file_name, str(err))
         return -1
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -260,9 +250,9 @@ def transformation_validation(input_mesh, output_mesh, input_data):
     """
 
     function_name = 'transformation_validation'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
-    print(print_pre_str, '* Transforming validation will be started')
+    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log.debug('Start function')
+    log.info('Transforming validation will be started')
 
     try:
         # Data transformation from input_mesh to output_mesh
@@ -283,27 +273,23 @@ def transformation_validation(input_mesh, output_mesh, input_data):
         elif numpy.size(input_re, 0) == 4:
             input_re_data = input_re[3]
 
-        print(print_pre_str, )
-        print(print_pre_str, '* Array output: input after retransformation')
-        print(print_pre_str, input_re_data)
-        print(print_pre_str, )
+        log.debug('Array output: input after retransformation')
+        # print(print_pre_str, input_re_data) #Loggable?
 
         # Calculating mean and standard deviation
         # For statistics the absolute values of fine_new_data are used
         diff = numpy.absolute(input_data - input_re_data)
 
-        print(print_pre_str, '* Statistics')
-        print(print_pre_str, '\t Nodes fine: \t\t', str(input_mesh[0].size))
-        print(print_pre_str, '\t Coarse fine: \t\t', str(output_mesh[0].size))
-        print(print_pre_str, )
-        print(print_pre_str, '\t * After transformation:')
-        print(print_pre_str, '\t\t NaN-Values: \t\t', str(sum(numpy.isnan(input_re_data))))
-        print(print_pre_str, '\t\t Mean: \t\t\t\t', str(numpy.nanmean(diff)))
-        print(print_pre_str, '\t\t Std. Deviation: \t', str(numpy.nanstd(diff)))
-        print(print_pre_str, )
+        log.debug('Statistics:')
+        log.debug('Nodes fine: %d', input_mesh[0].size)
+        log.debug('Coarse fine: %d', output_mesh[0].size)
+        log.debug('After transformation:')
+        log.debug('NaN-Values: %d', sum(numpy.isnan(input_re_data)))
+        log.debug('Mean: %f', numpy.nanmean(diff))
+        log.debug('Std. Deviation: %f', numpy.nanstd(diff))
 
         # Generating the visual output
-        print(print_pre_str, '* Plotting datasets to visually comparison')
+        log.info('Plotting datasets to visually comparison')
         mpl_fig = plt.figure()
         ax1 = mpl_fig.add_subplot(221)
         cb1 = ax1.scatter(input_mesh[0], input_mesh[1], s=1, c=input_data, cmap=plt.cm.get_cmap('RdBu'))
@@ -326,11 +312,11 @@ def transformation_validation(input_mesh, output_mesh, input_data):
         return 0
 
     except Exception as err:
+        log.critical('Execution aborted! [%s]', str(err))
         sys.exit(print_pre_str + 'ERROR: ' + str(err) + '\nExecution aborted!')
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################
@@ -355,19 +341,19 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
     """
 
     function_name = 'mesh_transformation'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
-    print(print_pre_str, '* Transforming information from input mesh to output mesh')
+    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log.debug('Start function')
+    log.info('Transforming information from input mesh to output mesh')
 
     try:
         # Check size of input_mesh
         if numpy.size(input_mesh, 0) == 2:
-            print(print_pre_str, 'Input is a 2D-mesh')
+            log.info('Input is a 2D-mesh')
             dimensions = 2
             input_mesh_list = (input_mesh[0], input_mesh[1])
 
         elif numpy.size(input_mesh, 0) == 3:
-            print(print_pre_str, 'Input is a 3D-mesh')
+            log.info('Input is a 3D-mesh')
             dimensions = 3
             input_mesh_list = (input_mesh[0], input_mesh[1], input_mesh[2])
 
@@ -376,11 +362,11 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
 
         # Check size of input_mesh
         if numpy.size(output_mesh, 0) == 2 and dimensions == 2:
-            print(print_pre_str, 'Output is a 2D-mesh')
+            log.info('Output is a 2D-mesh')
             output_mesh_list = (output_mesh[0], output_mesh[1])
 
         elif numpy.size(output_mesh, 0) == 3 and dimensions == 3:
-            print(print_pre_str, 'Output is a 3D-mesh')
+            log.info('Output is a 3D-mesh')
             output_mesh_list = (output_mesh[0], output_mesh[1], output_mesh[2])
 
         else:
@@ -401,7 +387,7 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
         # 1. linear interpolation
         # 2. nearest neighbor
         # 3. fill all NaN-gabs in 1. with 2.
-        print(print_pre_str, 'Calculation interpolation in 2D')
+        log.debug('Calculation interpolation in 2D')
 
         linear = griddata(input_mesh_list, input_data, output_mesh_list, 'linear')
         nearest = griddata(input_mesh_list, input_data, output_mesh_list, 'nearest')
@@ -417,19 +403,19 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
         output_array = numpy.append(output_mesh, [output_data], axis=0)
 
         # Print some statistics
-        print(print_pre_str, '* Statistics')
-        print(print_pre_str, '\t Intput Nodes: \t', str(input_mesh[0].size))
-        print(print_pre_str, '\t Output Nodes: \t', str(input_mesh[0].size))
-        print(print_pre_str, '\t NaN-Values: \t', str(sum(numpy.isnan(output_data))))
+        log.debug('Statistics:')
+        log.debug('Intput Nodes: %d', input_mesh[0].size)
+        log.debug('Output Nodes: %d', input_mesh[0].size)
+        log.debug('NaN-Values: %d', sum(numpy.isnan(output_data)))
 
         return output_array
 
     except Exception as err:
+        log.critical('Execution aborted! [%s]', str(err))
         sys.exit(print_pre_str + 'ERROR: ' + str(err) + '\nExecution aborted!')
 
     finally:
-        print(print_pre_str, 'exiting function')
-        print()
+        log.debug('Exit function')
 
 
 #####################################################################################################################

@@ -1,6 +1,7 @@
 import random
 import statistics
 import numpy
+import logging
 
 import matplotlib.pyplot as plt  # used for visualisation of transformation validation
 
@@ -18,13 +19,26 @@ def random_numbers_range(min_val, max_val, sigma_percentage = 0.05):
     Returns:
         double
     """
-    mu_val = (min_val+max_val)/2
-    sigma_val = mu_val * sigma_percentage
+    function_name = 'random_numbers_range'
+    log = logging.getLogger('random_mesh_input.py.' + function_name)
+    log.debug('Start function')
 
-    # Generating the random number
-    random_number = min(max_val, max(min_val, random.gauss(mu_val, sigma_val)))
+    try:
+        mu_val = (min_val+max_val)/2
+        sigma_val = mu_val * sigma_percentage
 
-    return random_number
+        # Generating the random number
+        random_number = min(max_val, max(min_val, random.gauss(mu_val, sigma_val)))
+
+        log.debug('Exit function')
+        return random_number
+
+    except Exception as err:
+        log.error('An error occured [%s]', str(err))
+        return -1
+
+    finally:
+        log.debug('Exit function')
 
 
 def get_random_dataset(dataset, maximum, plot = False):
@@ -41,70 +55,76 @@ def get_random_dataset(dataset, maximum, plot = False):
     """
 
     function_name = 'get_random_dataset'
-    print_pre_str = '\t' + function_name + ' >> '
-    print('* Start function: ', function_name)
-    print(print_pre_str, '* Analysing statistics')
+    log = logging.getLogger('random_mesh_input.py.' + function_name)
+    log.debug('Start function')
 
-    # Statistics of given dataset
-    min_val = min(dataset)
-    max_val = max(dataset)
-    mean_val = statistics.mean(dataset)
-    stdev_val = statistics.stdev(dataset)
-    coeff_of_var_val = stdev_val/mean_val # Will be used as input for the range of random numbers
+    try:
+        log.info('Analysing statistics')
 
-    print(print_pre_str, '* Statistics of input')
-    print(print_pre_str, '\t Minimum: \t\t\t\t', str(min_val))
-    print(print_pre_str, '\t Maximum: \t\t\t\t', str(max_val))
-    print(print_pre_str, '\t Mean: \t\t\t\t\t', str(mean_val))
-    print(print_pre_str, '\t Standard deviation: \t', str(stdev_val))
-    print(print_pre_str, '\t Coefficient of variation: \t', str(coeff_of_var_val))
+        # Statistics of given dataset
+        min_val = min(dataset)
+        max_val = max(dataset)
+        mean_val = statistics.mean(dataset)
+        stdev_val = statistics.stdev(dataset)
+        coeff_of_var_val = stdev_val/mean_val # Will be used as input for the range of random numbers
 
-    # Influencing the statistics of the given dataset depending on the given maximum percentage of deviation
-    min_val_off = 1
-    max_val_off = 1+maximum
+        log.debug('Statistics of input:')
+        log.debug('Minimum: %f', min_val)
+        log.debug('Maximum: %f', max_val)
+        log.debug('Mean: %f', mean_val)
+        log.debug('Standard deviation: %f', stdev_val)
+        log.debug('Coefficient of variation: %f', coeff_of_var_val)
 
-    # Swap numbers if min is bigger then max
-    if min_val_off > max_val_off:
-        min_val_off, max_val_off = max_val_off, min_val_off
+        # Influencing the statistics of the given dataset depending on the given maximum percentage of deviation
+        min_val_off = 1
+        max_val_off = 1+maximum
 
-    # Creating an empty ndarray of the same size as given input dataset
-    rand_array = numpy.empty_like(dataset)
+        # Swap numbers if min is bigger then max
+        if min_val_off > max_val_off:
+            min_val_off, max_val_off = max_val_off, min_val_off
 
-    # Filling the random array with random numbers
-    with numpy.nditer(rand_array, op_flags=['readwrite']) as it:
-        for x in it:
-            random_no = random_numbers_range(min_val_off, max_val_off, coeff_of_var_val)
-            x[...] = random_no
+        # Creating an empty ndarray of the same size as given input dataset
+        rand_array = numpy.empty_like(dataset)
 
-    rand_array = numpy.multiply(rand_array, dataset)
+        # Filling the random array with random numbers
+        with numpy.nditer(rand_array, op_flags=['readwrite']) as it:
+            for x in it:
+                random_no = random_numbers_range(min_val_off, max_val_off, coeff_of_var_val)
+                x[...] = random_no
 
-    # Statistics of given dataset
-    min_val_rand = min(rand_array)
-    max_val_rand = max(rand_array)
-    mean_val_rand = statistics.mean(rand_array)
-    stdev_val_rand = statistics.stdev(rand_array)
-    coeff_of_var_val_rand = stdev_val_rand/mean_val_rand # Will be used as input for the range of random numbers
+        rand_array = numpy.multiply(rand_array, dataset)
 
-    print(print_pre_str, '* Statistics of output')
-    print(print_pre_str, '\t Minimum: \t\t\t\t', str(min_val_rand))
-    print(print_pre_str, '\t Maximum: \t\t\t\t', str(max_val_rand))
-    print(print_pre_str, '\t Mean: \t\t\t\t\t', str(mean_val_rand))
-    print(print_pre_str, '\t Standard deviation: \t', str(stdev_val_rand))
-    print(print_pre_str, '\t Coefficient of variation: \t', str(coeff_of_var_val_rand))
+        # Statistics of given dataset
+        min_val_rand = min(rand_array)
+        max_val_rand = max(rand_array)
+        mean_val_rand = statistics.mean(rand_array)
+        stdev_val_rand = statistics.stdev(rand_array)
+        coeff_of_var_val_rand = stdev_val_rand/mean_val_rand # Will be used as input for the range of random numbers
 
-    # printing output for debugging purposes
-    if plot:
-        fig = plt.figure()
-        sub1 = fig.add_subplot(121)
-        sub1.hist(dataset, bins='auto', range=(min_val, max_val))
-        sub1.set_title('Histrogram input dataset')
+        log.debug('Statistics of output:')
+        log.debug('Minimum: %f', min_val_rand)
+        log.debug('Maximum: %f', max_val_rand)
+        log.debug('Mean: %f', mean_val_rand)
+        log.debug('Standard deviation: %f', stdev_val_rand)
+        log.debug('Coefficient of variation: %f', coeff_of_var_val_rand)
 
-        sub2 = fig.add_subplot(122)
-        sub2.hist(rand_array, bins='auto', range=(min_val_rand, max_val_rand))
-        sub2.set_title('Histrogram random numbers')
-        plt.show()
+        # printing output for debugging purposes
+        if plot:
+            fig = plt.figure()
+            sub1 = fig.add_subplot(121)
+            sub1.hist(dataset, bins='auto', range=(min_val, max_val))
+            sub1.set_title('Histrogram input dataset')
 
-    print(print_pre_str, 'exiting function')
-    print()
+            sub2 = fig.add_subplot(122)
+            sub2.hist(rand_array, bins='auto', range=(min_val_rand, max_val_rand))
+            sub2.set_title('Histrogram random numbers')
+            plt.show()
 
-    return rand_array
+        return rand_array
+
+    except Exception as err:
+        log.error('An error occured [%s]', str(err))
+        return -1
+
+    finally:
+        log.debug('Exit function')
