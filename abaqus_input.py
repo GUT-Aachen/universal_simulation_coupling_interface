@@ -484,7 +484,7 @@ def read_part_nodes (input_file_path, part_name):
                     z_array.append(float(z))
 
                 except Exception as err:
-                    log.error('An error occured while reading coordinates for nodes. Error: %s', str(err))
+                    log.error('An error occured while reading coordinates for nodes in line %s. Error: %s', line_string, str(err))
 
         # Close input file
         input_file.close()
