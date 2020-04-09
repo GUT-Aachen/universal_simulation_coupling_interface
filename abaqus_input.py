@@ -9,13 +9,15 @@ import matplotlib.pyplot as plt  # used for visualisation of transformation vali
 
 
 def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
-    """ Function to create a dictionary consisting of all node number and abaqus boundary conditions.
+    """ Function to create a dictionary consisting of all node number and abaqus boundary conditions. An entry of the
+        the dictionary looks, due to bc1 = 8, for example like this: (node-234-PP, 8, 8, 123456).
+        If the second boundary condition is not set, the bc1 will be used twice, according to Abaqus manual.
 
      Parameters:
         nset_dict: dictionary containing node_no:node_set_names
-        dataset (ndarray): array consisting of two columns: 1. nodes, 2. boundary conditions
-        bc1: frist boundary condition number
-        bc2: second boundary condition number (optional)
+        dataset (ndarray): array consisting of two columns: 1. nodes, 2. boundary condition values
+        bc1: first boundary condition number, according to Abaqus manual
+        bc2: second boundary condition number, according to Abaqus manual (optional)
 
     Returns:
         bc_dict
@@ -32,7 +34,7 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
 
     try:
         # Every node gets its own boundary condition as shown below:
-        # _Node392_PP_, 8, 8, 123456
+        # node-1-PP, 8, 8, 123456
         with numpy.nditer(dataset, op_flags=['readonly']) as it:
             for data in it:
 
@@ -56,7 +58,9 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
 #####################################################################################################################
 
 def create_nodesets_all_list(nset_dict, part_name):
-    """ Function to create a dictionary consisting of all node number and abaqus node set combinations.
+    """ Function to create a dictionary consisting of all node number and abaqus node set combinations. An entry of the
+        the dictionary looks, due to part_name = 'Part-1', for example like this:
+        (234: *Nset, nset = node-234-PP, internal, instance = Part-1 \n 234).
 
      Parameters:
         nset_dict: dictionary containing node_no:node_set_names
@@ -74,8 +78,8 @@ def create_nodesets_all_list(nset_dict, part_name):
 
     try:
         # Every node gets its own node set as shown below:
-        # *Nset, nset = _Node392_PP_, internal, instance = Part_1 - 1
-        # 392
+        # *Nset, nset = node-234-PP, internal, instance = Part-1
+        # 234
 
         for node, name in nset_dict.items():
             nset_string = '*Nset, nset=' + name + ', instance=' + part_name + '\n' + str(node) + ','
@@ -95,10 +99,11 @@ def create_nodesets_all_list(nset_dict, part_name):
 #####################################################################################################################
 
 def create_nodesets_all(nodes, bc_name):
-    """ Function to create a dictionary consisting of all node number and abaqus node set combinations.
+    """ Function to create a dictionary consisting of all node number and abaqus node set combinations. An entry of the
+        the dictionary looks, due to bc_name = 'PP', for example like this: (234: node-234-PP).
 
      Parameters:
-        nodes (ndarray): array consisting of one column: 1. nodes
+        nodes (ndarray): array consisting of just one column: nodes numbers
         bc_name: name of the boundary condition
 
     Returns:
@@ -194,15 +199,21 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
 #####################################################################################################################
 #####################################################################################################################
 
-def write_bashfile_windows(output_path, param_input, param_job, param_user, param_oldjob = ''):
-    """ Function to create a dictionary consisting of all node number and abaqus node set combinations.
+def write_bashfile_windows(output_path, param_input, param_job, param_user, param_scratch='', param_oldjob='',
+                           param_additional=''):
+    """ Function to create windows bash file to execute Abaqus simulation in console.
 
      Parameters:
-        nodes (ndarray): array consisting of one column: 1. nodes
-        bc_name: name of the boundary condition
+        output_path (String): Path where to save the bash file
+        param_input (String): Input filename including path
+        param_job (String): Name of the job to be used as filename
+        param_user (String): User subroutine filename including path
+        param_scratch (String): Path of the scratch directory (optional)
+        param_oldjob (String): name of the old job (optional)
+        param_additional (String): Aditional parameters to be used for the execution of the simulation
 
     Returns:
-        dictionary{node_no: nset_name}
+        bash_file_name (String)
     """
 
     function_name = 'write_inputfile'
@@ -214,22 +225,39 @@ def write_bashfile_windows(output_path, param_input, param_job, param_user, para
         output_path = output_path.replace("\\", "/")
 
         bash_file_name = output_path + '/' + param_job + '.bat'
+
+        # Create bash file and open in write mode
         bash_file = open(bash_file_name, 'w')
 
         # Replace backslashes by slashes
         param_input = param_input.replace("/", "\\")
         param_user = param_user.replace("/", "\\")
+        param_scratch = param_scratch.replace("/", "\\")
 
-        # Distinguishing between restart analysis and normal analysis. Restart needs 'oldjob-parameter'
+        param_additional = ' interactive ' + param_additional
+
+        # Create the command line for the bash file according to given function input parameters.
+        cmd_string = 'call abaqus job=' + param_job + ' input=' + param_input
+
+        # Check if oldjob parameter is given and add parameter to command line
         if param_oldjob != '':
-            cmd_string = 'abaqus job=' + param_job + ' input=' + param_input + ' oldjob=' + param_oldjob + ' user=' + param_user + ' interactive '
-            bash_file.write(cmd_string)
-        else:
-            cmd_string = 'abaqus job=' + param_job + ' input=' + param_input + ' user=' + param_user + ' interactive '
-            bash_file.write(cmd_string)
+            cmd_string = cmd_string + ' oldjob=' + param_oldjob
 
+        # Add user subroutine to command line
+        cmd_string = cmd_string + ' user=' + param_user
+
+        # Check if scratch parameter is given and add parameter to command line
+        if param_scratch != '':
+            cmd_string = cmd_string + ' scratch=' + param_scratch
+
+        # Add additional parameters to command line
+        cmd_string = cmd_string + param_additional
+
+        # Write and close bash file
+        bash_file.write(cmd_string)
         bash_file.close()
 
+        # Return bash file name
         return bash_file_name
 
     except Exception as err:
@@ -362,6 +390,12 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
 
     finally:
         log.debug('Exit function')
+
+
+#####################################################################################################################
+#####################################################################################################################
+
+# TODO Function to extract set of nodes and according coordinates from input file
 
 #####################################################################################################################
 
