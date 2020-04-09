@@ -466,12 +466,9 @@ def read_part_nodes (input_file_path, part_name):
                         node = line_array[0]
                         x = line_array[1]
                         y = line_array[2]
+                        z = 0
 
                         log.debug('node: %s;\t x: %s;\t y: %s', node, x, y)
-
-                        node_array.append(int(node))
-                        x_array.append(float(x))
-                        y_array.append(float(y))
 
                     if line_array.__len__() == 4:
                         node = line_array[0]
@@ -481,10 +478,10 @@ def read_part_nodes (input_file_path, part_name):
 
                         log.debug('node: %s;\t x: %s;\t y: %s\t z: %s', node, x, y, z)
 
-                        node_array.append(int(node))
-                        x_array.append(float(x))
-                        y_array.append(float(y))
-                        z_array.append(float(z))
+                    node_array.append(int(node))
+                    x_array.append(float(x))
+                    y_array.append(float(y))
+                    z_array.append(float(z))
 
                 except Exception as err:
                     log.error('An error occured while reading coordinates for nodes. Error: %s', str(err))
