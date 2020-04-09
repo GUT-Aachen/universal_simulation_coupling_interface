@@ -454,7 +454,7 @@ def read_part_nodes (input_file_path, part_name):
             # True if the coordinates are stored in the assembly.
             if assembly_string == line_string[:assembly_string.__len__()]:
                 log.info('Found nodes in assembly at: %s. Start reading coordinates of nodes for this part.',
-                         part_string)
+                         assembly_string)
                 read_coordinates = True
 
             # If beginning of coordination listing is found, the coordinates are going to be extracted from each line
