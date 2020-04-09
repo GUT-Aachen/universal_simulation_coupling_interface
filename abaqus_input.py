@@ -54,14 +54,14 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
 #####################################################################################################################
 #####################################################################################################################
 
-def create_nodesets_all_list(nset_dict, part_name):
+def create_nodesets_all_list(nset_dict, assembly_name):
     """ Function to create a dictionary consisting of all node number and abaqus node set combinations. An entry of the
-        the dictionary looks, due to part_name = 'Part-1', for example like this:
+        the dictionary looks, due to assembly_name = 'Part-1', for example like this:
         (234: *Nset, nset = node-234-PP, internal, instance = Part-1 \n 234).
 
      Parameters:
         nset_dict: dictionary containing node_no:node_set_names
-        part_name: name of the part containing the nodes
+        assembly_name: name of the assembly containing the nodes
 
     Returns:
         dictionary{node_no: nset_name}
@@ -79,7 +79,7 @@ def create_nodesets_all_list(nset_dict, part_name):
         # 234
 
         for node, name in nset_dict.items():
-            nset_string = '*Nset, nset=' + name + ', instance=' + part_name + '\n' + str(node) + ','
+            nset_string = '*Nset, nset=' + name + ', instance=' + assembly_name + '\n' + str(node) + ','
             nset_list[int(node)] = nset_string
 
         return nset_list
