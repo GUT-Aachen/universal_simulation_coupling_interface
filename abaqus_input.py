@@ -402,8 +402,8 @@ def read_part_nodes (input_file_path, part_name):
         part_name (String): Name of the part
 
     Returns:
-        ndarray: Containing nodes and corresponding coordinates for each node in part_name
-
+        ndarray: Containing nodes and corresponding coordinates for each node in part_name [x, y, z, node]
+                    or [x, y, node]
     """
 
     function_name = 'read_part_nodes'
@@ -495,10 +495,10 @@ def read_part_nodes (input_file_path, part_name):
         # Return ndarray containing a set of nodes and the corresponding coordinates.
         if z_array.__len__() == 0:
             log.info('Added %s nodes with x/y-coordinates', node_array.__len__())
-            return numpy.array([node_array, x_array, y_array])
+            return numpy.array([x_array, y_array, node_array])
         else:
             log.info('Added %s nodes with x/y/z-coordinates', node_array.__len__())
-            return numpy.array([node_array, x_array, y_array, z_array])
+            return numpy.array([x_array, y_array, z_array, node_array])
 
     except Exception as err:
         log.error(str(err))
