@@ -118,7 +118,7 @@ def create_nodesets_all(nodes, bc_name):
 
     try:
         # Every node gets its own node set as shown below:
-        # _Node392_PP_
+        # node-234-PP
         with numpy.nditer(nodes, op_flags=['readonly']) as it:
             for node in it:
                 nset_name = 'node-' + str(node) + '-' + bc_name
@@ -128,6 +128,7 @@ def create_nodesets_all(nodes, bc_name):
 
     except Exception as err:
         log.error(str(err))
+        raise Exception
         return -1
 
     finally:
@@ -486,7 +487,7 @@ def read_part_nodes (input_file_path, part_name):
                     z_array.append(float(z))
 
                 except Exception as err:
-                    log.error('An error occured while reading coordinates for nodes in line %s. Error: %s', line_string, str(err))
+                    log.warning('An error occured while reading coordinates for nodes in line %s. Error: %s', line_string, str(err))
 
         # Close input file
         input_file.close()
@@ -497,7 +498,11 @@ def read_part_nodes (input_file_path, part_name):
         else:
             log.info('Added %s nodes with x/y/z-coordinates', node_array.__len__())
 
-        return numpy.array([x_array, y_array, z_array, node_array])
+        if not node_array.__len__() == 0:
+            return numpy.array([x_array, y_array, z_array, node_array])
+        else:
+            log.error('No nodes found for part: %s. Abort!', part_name)
+            exit()
 
     except Exception as err:
         log.error(str(err))
