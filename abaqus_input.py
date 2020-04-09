@@ -446,15 +446,17 @@ def read_part_nodes (input_file_path, part_name):
 
             # True if the coordinates are stored in a part.
             if part_string == line_string:
-                log.info('Found nodes in parts at: %s. Start reading coordinates of nodes for this part.',
-                         part_string)
+                log.info('Found nodes in parts at "%s". Start reading coordinates of nodes for this part.',
+                         line_string)
                 read_coordinates = True
+                continue
 
             # True if the coordinates are stored in the assembly.
             if assembly_string == line_string[:assembly_string.__len__()]:
-                log.info('Found nodes in assembly at: %s. Start reading coordinates of nodes for this part.',
-                         assembly_string)
+                log.info('Found nodes in assembly at "%s". Start reading coordinates of nodes for this part.',
+                         line_string)
                 read_coordinates = True
+                continue
 
             # If beginning of coordination listing is found, the coordinates are going to be extracted from each line
             # and appended into an earlier initialized array. It must be checked if the line contains x/y/z or only
