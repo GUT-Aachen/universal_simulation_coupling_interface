@@ -2,9 +2,6 @@ import numpy
 import os
 import logging
 
-from scipy.interpolate import griddata  # used for mesh transformation
-import matplotlib.pyplot as plt  # used for visualisation of transformation validation
-
 #####################################################################################################################
 
 
@@ -150,7 +147,7 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
     Returns:
         dictionary{node_no: nset_name}
     """
-
+    # FIXME Function description
     function_name = 'write_inputfile'
     log = logging.getLogger('abaqus_input.py.' + function_name)
     log.debug('Start function')
@@ -169,12 +166,12 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
 
         for line in input_file:
 
-            if ('** Nset_python_fill_in_placeholder' in line):
+            if '** Nset_python_fill_in_placeholder' in line:
                 file.write('**Node sets for every single node created by Python' + '\n')
                 for nset in nset_list.values():
                     file.write(nset  + '\n')
 
-            elif ('** bc_python_fill_in_placeholder' in line):
+            elif '** bc_python_fill_in_placeholder' in line:
                 file.write('**Boundary conditions created by Python' + '\n')
                 file.write('*Boundary' + '\n')
                 for bc in dict_bc.values():
@@ -282,7 +279,7 @@ def log(msg, log_file):
     Returns:
         dictionary{node_no: nset_name}
     """
-
+    # FIXME Function description
     print(msg)
     log_file.write(msg + '\n')
     return 0
@@ -302,7 +299,7 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
     Returns:
         dictionary{node_no: nset_name}
     """
-
+    # FIXME Function description
     function_name = 'write_inputfile_restart'
     log = logging.getLogger('abaqus_input.py.' + function_name)
     log.debug('Start function')
@@ -395,8 +392,119 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
 #####################################################################################################################
 #####################################################################################################################
 
-# TODO Function to extract set of nodes and according coordinates from input file
+def read_part_nodes (input_file_path, part_name):
+    """ Function to create an array consisting of all node number and the corresponding coordinates. Full path of the
+        input file must be passed. The name of the part one want to extract the node-coordinates must be passed as
+        well. The part name is not case sensitive!
+
+     Parameters:
+        input_file_path (String): Full path of input file
+        part_name (String): Name of the part
+
+    Returns:
+        ndarray: Containing nodes and corresponding coordinates for each node in part_name
+
+    """
+
+    function_name = 'read_part_nodes'
+    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log.debug('Start function')
+
+    try:
+        # Check if file exists
+        if not os.path.isfile(input_file_path):
+            raise FileNotFoundError
+
+        # Open input file
+        input_file = open(input_file_path, 'r')
+
+        # Coordinates of nodes can be stored in part or in assembly therefore two search strings (case insensitive) have
+        # have to be created.
+        part_string = '*Part, name=' + part_name
+        part_string = part_string.lower()
+        assembly_string = '*Instance, name=' + part_name
+        assembly_string = assembly_string.lower()
+
+        # Variable set to True when node information have been found.
+        read_coordinates = False
+
+        # Initialize empty arrays for nodes and coordinates. These will be assembled after filling with data.
+        node_array = []
+        x_array = []
+        y_array = []
+        z_array = []
+
+        # Check each line of input file
+        for line in input_file:
+            line_string = line.strip().lower()
+
+            # If read_coordinates is True and *Element was found in the actual line, the listing of coordinates ended.
+            if '*Element,' in line:
+                if read_coordinates:
+                    log.debug('Found end of part/assembly.')
+                    break
+
+            # True if the coordinates are stored in a part.
+            if part_string == line_string:
+                log.info('Found nodes in parts at: %s. Start reading coordinates of nodes for this part.',
+                         part_string)
+                read_coordinates = True
+
+            # True if the coordinates are stored in the assembly.
+            if assembly_string == line_string:
+                log.info('Found nodes in assembly at: %s. Start reading coordinates of nodes for this part.',
+                         part_string)
+                read_coordinates = True
+
+            # If beginning of coordination listing is found, the coordinates are going to be extracted from each line
+            # and appended into an earlier initialized array. It must be checked if the line contains x/y/z or only
+            # x/y coordinates.
+            if read_coordinates:
+                try:
+                    line_array = numpy.fromstring(line, dtype=float, sep=',')
+                    if line_array.__len__() == 3:
+                        node = line_array[0]
+                        x = line_array[1]
+                        y = line_array[2]
+
+                        log.debug('node: %s;\t x: %s;\t y: %s', node, x, y)
+
+                        node_array.append(int(node))
+                        x_array.append(float(x))
+                        y_array.append(float(y))
+
+                    if line_array.__len__() == 4:
+                        node = line_array[0]
+                        x = line_array[1]
+                        y = line_array[2]
+                        z = line_array[3]
+
+                        log.debug('node: %s;\t x: %s;\t y: %s\t z: %s', node, x, y, z)
+
+                        node_array.append(int(node))
+                        x_array.append(float(x))
+                        y_array.append(float(y))
+                        z_array.append(float(z))
+
+                except Exception as err:
+                    log.error('An error occured while reading coordinates for nodes. Error: %s', str(err))
+
+        # Close input file
+        input_file.close()
+
+        # Return ndarray containing a set of nodes and the corresponding coordinates.
+        if z_array.__len__() == 0:
+            log.info('Added %s nodes with x/y-coordinates', node_array.__len__())
+            return numpy.array([node_array, x_array, y_array])
+        else:
+            log.info('Added %s nodes with x/y/z-coordinates', node_array.__len__())
+            return numpy.array([node_array, x_array, y_array, z_array])
+
+    except Exception as err:
+        log.error(str(err))
+        return -1
+
+    finally:
+        log.debug('Exit function')
 
 #####################################################################################################################
-
-
