@@ -395,11 +395,12 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
 def read_part_nodes (input_file_path, part_name):
     """ Function to create an array consisting of all node number and the corresponding coordinates. Full path of the
         input file must be passed. The name of the part one want to extract the node-coordinates must be passed as
-        well. The part name is not case sensitive!
+        well. The part name is not case sensitive! If parts are independent and meshed at the assembly, then the
+        name of the assembly must be set as part_name input parameter.
 
      Parameters:
         input_file_path (String): Full path of input file
-        part_name (String): Name of the part
+        part_name (String): Name of the part/assembly
 
     Returns:
         ndarray: Containing nodes and corresponding coordinates for each node in part_name [x, y, z, node]
@@ -451,7 +452,7 @@ def read_part_nodes (input_file_path, part_name):
                 read_coordinates = True
 
             # True if the coordinates are stored in the assembly.
-            if assembly_string == line_string:
+            if assembly_string == line_string[:assembly_string.__len__()]:
                 log.info('Found nodes in assembly at: %s. Start reading coordinates of nodes for this part.',
                          part_string)
                 read_coordinates = True
