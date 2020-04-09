@@ -196,8 +196,8 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
 #####################################################################################################################
 #####################################################################################################################
 
-def write_bashfile_windows(output_path, param_input, param_job, param_user, param_scratch='', param_oldjob='',
-                           param_additional=''):
+def write_bashfile_windows(output_path, param_input, param_job, param_user, param_scratch='', param_additional='',
+                           param_oldjob=''):
     """ Function to create windows bash file to execute Abaqus simulation in console.
 
      Parameters:
