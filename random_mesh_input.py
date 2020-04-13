@@ -21,24 +21,26 @@ def random_numbers_range(min_val, max_val, sigma_percentage = 0.05):
     """
     function_name = 'random_numbers_range'
     log = logging.getLogger('random_mesh_input.py.' + function_name)
-    log.debug('Start function')
+    #log.debug('Start function')
+
 
     try:
         mu_val = (min_val+max_val)/2
-        sigma_val = mu_val * sigma_percentage
+        # If sigma_val is 0, the result of random.gauss equals mu_val. Therefore it will be added 0.01.
+        sigma_val = mu_val * sigma_percentage + 0.01
+
+
 
         # Generating the random number
         random_number = min(max_val, max(min_val, random.gauss(mu_val, sigma_val)))
-
-        log.debug('Exit function')
         return random_number
 
     except Exception as err:
         log.error('An error occured [%s]', str(err))
         return -1
 
-    finally:
-        log.debug('Exit function')
+    # finally:
+        # log.debug('Exit function')
 
 
 def get_random_dataset(dataset, maximum, plot = False):
