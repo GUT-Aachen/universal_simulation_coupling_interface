@@ -287,6 +287,10 @@ def transformation_validation(input_mesh, output_mesh, input_data):
         log.debug('NaN-Values: %d', sum(numpy.isnan(input_re_data)))
         log.debug('Mean: %f', numpy.nanmean(diff))
         log.debug('Std. Deviation: %f', numpy.nanstd(diff))
+        log.debug('Mean Match: %f', numpy.nanmean(numpy.absolute(input_re_data/input_data)))
+        log.debug('Std. Deviation: %f', numpy.nanstd(numpy.absolute(input_re_data / input_data)))
+        log.debug('Worst Match: %f', numpy.ndarray.max(numpy.absolute(input_re_data / input_data)))
+        log.debug('Worst Match: %f', numpy.ndarray.min(numpy.absolute(input_re_data / input_data)))
 
         # Generating the visual output
         log.info('Plotting datasets to visually comparison')
@@ -348,12 +352,12 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
     try:
         # Check size of input_mesh
         if numpy.size(input_mesh, 0) == 2:
-            log.info('Input is a 2D-mesh')
+            log.info('Input is a 2D-mesh: %s nodes', numpy.size(input_mesh, 1))
             dimensions = 2
             input_mesh_list = (input_mesh[0], input_mesh[1])
 
         elif numpy.size(input_mesh, 0) == 3:
-            log.info('Input is a 3D-mesh')
+            log.info('Input is a 3D-mesh: %s nodes', numpy.size(input_mesh, 1))
             dimensions = 3
             input_mesh_list = (input_mesh[0], input_mesh[1], input_mesh[2])
 
@@ -362,11 +366,11 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
 
         # Check size of input_mesh
         if numpy.size(output_mesh, 0) == 2 and dimensions == 2:
-            log.info('Output is a 2D-mesh')
+            log.info('Output is a 2D-mesh: %s nodes', numpy.size(output_mesh, 1))
             output_mesh_list = (output_mesh[0], output_mesh[1])
 
         elif numpy.size(output_mesh, 0) == 3 and dimensions == 3:
-            log.info('Output is a 3D-mesh')
+            log.info('Output is a 3D-mesh: %s nodes', numpy.size(output_mesh, 1))
             output_mesh_list = (output_mesh[0], output_mesh[1], output_mesh[2])
 
         else:
@@ -387,19 +391,24 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
         # 1. linear interpolation
         # 2. nearest neighbor
         # 3. fill all NaN-gabs in 1. with 2.
-        log.debug('Calculation interpolation in 2D')
-
-        linear = griddata(input_mesh_list, input_data, output_mesh_list, 'linear')
+        # FIXME slowness of linear. Idea scipy.ndimage.interpolation.map_coordinates
+        # log.debug('Start linear transformation')
+        # linear = griddata(input_mesh_list, input_data, output_mesh_list, 'linear')
+        # log.debug('End linear transformation')
+        # TODO 'nearest' should be done only with the nan values from 'linear' to speed up!
+        log.debug('Start nearest neighbor transformation')
         nearest = griddata(input_mesh_list, input_data, output_mesh_list, 'nearest')
+        log.debug('End nearest neighbor transformation')
 
         # Search NaN in linear and replace by nearest
-        for x in range(len(linear)):
-            if numpy.isnan(linear[x]):
-                linear[x] = nearest[x]
-            # print(print_pre_str, str(linear[x]), ' is nearest neighbor instead of NaN')
+        # for x in range(len(linear)):
+        #     if numpy.isnan(linear[x]):
+        #         linear[x] = nearest[x]
+        #     # print(print_pre_str, str(linear[x]), ' is nearest neighbor instead of NaN')
 
         # Create return: array including mesh and data
-        output_data = linear
+        # output_data = linear
+        output_data = nearest
         output_array = numpy.append(output_mesh, [output_data], axis=0)
 
         # Print some statistics
@@ -412,7 +421,7 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
 
     except Exception as err:
         log.critical('Execution aborted! [%s]', str(err))
-        sys.exit(print_pre_str + 'ERROR: ' + str(err) + '\nExecution aborted!')
+        exit()
 
     finally:
         log.debug('Exit function')
