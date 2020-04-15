@@ -33,7 +33,7 @@ class Grid:
 
     def add_node(self, node_number, x_coordinate, y_coordinate, z_coordinate=None, values=None):
         """
-        Adding a node to the grid.
+        Adding a node to the grid. Each node number must be used just once, otherwise an error is thrown.
 
         Args:
             node_number: node number of the new node (optional)
@@ -50,12 +50,8 @@ class Grid:
                            f' {self.nodes[node_number].coordinates}')
         else:
             if isinstance(node_number, int):
-                existing_node = self.coordinates_exist(x_coordinate, y_coordinate, z_coordinate)
-                if existing_node:
-                    self.log.error(f'Coordinates already assigned. {self[existing_node]}')
-                else:
-                    self.nodes[node_number] = Node(node_number, x_coordinate, y_coordinate, z_coordinate, values)
-                    return self.nodes[node_number]
+                self.nodes[node_number] = Node(node_number, x_coordinate, y_coordinate, z_coordinate, values)
+                return 0
             else:
                 self.log.error(f'Integer expected got {node_number}')
 
@@ -74,12 +70,8 @@ class Grid:
 
         """
         if node_number in self:
-            existing_node = self.coordinates_exist(x_coordinate, y_coordinate, z_coordinate)
-            if existing_node and not existing_node == node_number:
-                self.log.error(f'Coordinates already assigned. {self[existing_node]}')
-            else:
-                self.nodes[node_number] = Node(node_number, x_coordinate, y_coordinate, z_coordinate, values)
-                return 0
+            self.nodes[node_number] = Node(node_number, x_coordinate, y_coordinate, z_coordinate, values)
+            return 0
         else:
             self.log.error(f'Node number {node_number} does not exist.')
 
@@ -104,3 +96,28 @@ class Grid:
                 if node.coordinates == (x_coordinate, y_coordinate, 0):
                     return node_number
         return 0
+
+    def validation_check(self):
+        """
+        Checking the grid for any issues like:
+            1. Using the same coordinates in two different nodes
+
+        Returns: 0 if no errors occurred
+
+        """
+
+        error = 0
+
+        for node_number_a, node_a in self.nodes.items():
+            for node_number_b, node_b in self.nodes.items():
+                if node_number_a == node_number_b:
+                    continue
+                if node_a.coordinates == node_b.coordinates:
+                    log.error(f'Node {node_number_a} and node {node_number_b} are sharing the same'
+                              f' coordinates ({node_a.coordinates})')
+                    error += 1
+
+        if not error:
+            return 0
+        else:
+            return error

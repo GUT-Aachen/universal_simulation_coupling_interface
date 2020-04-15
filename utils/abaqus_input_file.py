@@ -59,14 +59,14 @@ class AbaqusInputFile:
 
         return instances
 
-    def get_nodes(self, part_name):
-        """ Function to create an array consisting of all node number and the corresponding coordinates. Full path of
-            the input file must be passed. The name of the part one want to extract the node-coordinates must be passed
-            as well. The part name is not case sensitive! If parts are independent and meshed at the assembly, then the
+    def get_nodes(self, object_name):
+        """ Function to create an listing consisting of dictionary for each found node, containing node number and
+            the corresponding coordinates. The name of the part one want to extract the node-coordinates must be passed.
+            The part name is not case sensitive! If parts are independent and meshed at the assembly, then the
             name of the assembly must be set as part_name input parameter.
 
          Parameters:
-            part_name (String): Name of the part/assembly
+            object_name (String): Name of the part/assembly
 
         Returns:
             dict: Containing nodes and corresponding coordinates for each node in part_name {x_coordinate, y_coordinate,
@@ -77,15 +77,15 @@ class AbaqusInputFile:
 
             # Coordinates of nodes can be stored in part or in assembly therefore two search strings
             # (case insensitive) have to be created.
-            part_string = '*Part, name=' + part_name
+            part_string = '*Part, name=' + object_name
             part_string = part_string.lower()
-            assembly_string = '*Instance, name=' + part_name
+            assembly_string = '*Instance, name=' + object_name
             assembly_string = assembly_string.lower()
 
             # Variable set to True when node information have been found.
             read_coordinates = False
 
-            # Initialize empty arrays for nodes and coordinates. These will be assembled after filling with data.
+            # Initialize empty list for collecting dictionarys.
             node_list = []
 
             # Check each line of input file
@@ -137,20 +137,15 @@ class AbaqusInputFile:
                         self.log.warning(f'An error occured while reading coordinates for nodes in line '
                                          f'{line_string}. Error: {str(err)}')
 
-            # Return ndarray containing a set of nodes and the corresponding coordinates.
             self.log.info('Added %s nodes with x/y/z-coordinates', len(node_list))
 
             if not len(node_list) == 0:
                 return node_list
-                # return {'x' : x_array, 'y' : y_array, 'z' : z_array, 'node' : node_array}
 
             else:
-                self.log.error('No nodes found for part: %s. Abort!', part_name)
+                self.log.error('No nodes found for part: %s. Abort!', object_name)
                 exit()
 
         except Exception as err:
             self.log.error(str(err))
             return -1
-
-        finally:
-            log.debug('Exit function')
