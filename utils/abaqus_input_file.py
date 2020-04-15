@@ -148,4 +148,25 @@ class AbaqusInputFile:
 
         except Exception as err:
             self.log.error(str(err))
-            return -1
+            return 0
+
+    def node_set_all_list(self):  # TODO
+        return 0
+
+    def node_set_all(self):  # TODO
+        return 0
+
+    def set_boundary_condition(self):  # TODO
+        return 0
+
+    def write_input_file(self):  # TODO
+        return 0
+
+    def wrtie_bash_file(self):  # TODO
+        return 0
+
+    def preprocessing(self):  # TODO
+        return 0
+
+    def postprocessing(self):  # TODO
+        return 0
