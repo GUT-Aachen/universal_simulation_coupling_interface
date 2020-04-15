@@ -29,6 +29,12 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
 
     bc_dict = {}
 
+    # Check if length of nset_dict and dataset fit
+    if not len(dataset[0]) == len(nset_dict):
+        log.error('Length of dataset (%s) and nset_dict (%s) are not the same.', len(dataset[0]), len(nset_dict))
+        return 10
+        exit()
+
     try:
         # Every node gets its own boundary condition as shown below:
         # node-1-PP, 8, 8, 123456
@@ -41,11 +47,13 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
                 bc_string = nset_dict[node] + ', ' + str(bc1) + ', ' + str(bc2) + ', ' + str(value)
                 bc_dict[int(node)] = bc_string
 
+        log.debug("Boundary conditions created successfully.")
+
         return bc_dict
 
     except Exception as err:
         log.error(str(err))
-        return -1
+        return 999
 
     finally:
         log.debug('Exit function')
@@ -56,13 +64,11 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
 
 def create_nodesets_all_list(nset_dict, assembly_name):
     """ Function to create a dictionary consisting of all node number and abaqus node set combinations. An entry of the
-        the dictionary looks, due to assembly_name = 'Part-1', for example like this:
+        the dictionary looks, due to assembly_nam = 'Part-1', for example like this:
         (234: *Nset, nset = node-234-PP, internal, instance = Part-1 \n 234).
 
      Parameters:
         nset_dict: dictionary containing node_no:node_set_names
-        assembly_name: name of the assembly containing the nodes
-
     Returns:
         dictionary{node_no: nset_name}
     """
@@ -188,7 +194,7 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
 
     except Exception as err:
         log.error(str(err))
-        return -1
+        return 999
 
     finally:
         log.debug('Exit function')
@@ -260,7 +266,7 @@ def write_bashfile_windows(output_path, param_input, param_job, param_user, para
 
     except Exception as err:
         log.error(str(err))
-        return -1
+        return 999
 
     finally:
         log.debug('Exit function')
@@ -320,6 +326,7 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
         copy_input_file = 0
 
         # Write restart headline
+        log.debug('Write Header')
         restart_file.write('** Description:' + '\n')
         restart_file.write('** Restart for input file: ' + prev_input_file_path + '\n')
         restart_file.write('** ----------------------------------------------------------------' + '\n')
@@ -336,12 +343,15 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
                     restart_file.write(line)
 
         # Write new step
+        log.debug('Begin Step')
         restart_file.write('**' + '\n')
         restart_file.write('** STEP:' + step_name + '\n')
         restart_file.write('**' + '\n')
         restart_file.write('*Step, name=' + step_name + ', nlgeom=NO, amplitude=RAMP, inc=10000' + '\n')
         restart_file.write('*Soils, consolidation, end=PERIOD, utol=50000., creep=none' + '\n')
         restart_file.write('6000., 43200., 1e-05, 6000.,' + '\n')
+
+        log.debug('Step: Adding boundary conditions')
         restart_file.write('**' + '\n')
         restart_file.write('** BOUNDARY CONDITIONS' + '\n')
         restart_file.write('**' + '\n')
@@ -352,6 +362,7 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
         for bc in dict_bc.values():
             restart_file.write(bc + '\n')
 
+        log.debug('Step: Adding output request')
         restart_file.write('**' + '\n')
         restart_file.write('** OUTPUT REQUESTS' + '\n')
         restart_file.write('**' + '\n')
@@ -375,6 +386,7 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
         restart_file.write('*NODE FILE' + '\n')
         restart_file.write('COORD' + '\n')
         restart_file.write('*End Step' + '\n')
+        log.debug('End Step')
 
         # Close files
         prev_input_file.close()
@@ -384,7 +396,7 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
 
     except Exception as err:
         log.error(str(err))
-        return -1
+        return 999
 
     finally:
         log.debug('Exit function')
@@ -471,7 +483,8 @@ def read_part_nodes (input_file_path, part_name):
                         y = line_array[2]
                         z = 0
 
-                        log.debug('node: %s;\t x: %s;\t y: %s', node, x, y)
+                        # Logging of each node leads to heavy spamming in log file
+                        # log.debug('node: %s;\t x: %s;\t y: %s', node, x, y)
 
                     if line_array.__len__() == 4:
                         node = line_array[0]
@@ -479,7 +492,8 @@ def read_part_nodes (input_file_path, part_name):
                         y = line_array[2]
                         z = line_array[3]
 
-                        log.debug('node: %s;\t x: %s;\t y: %s\t z: %s', node, x, y, z)
+                        # Logging of each node leads to heavy spamming in log file
+                        # log.debug('node: %s;\t x: %s;\t y: %s\t z: %s', node, x, y, z)
 
                     node_array.append(int(node))
                     x_array.append(float(x))
