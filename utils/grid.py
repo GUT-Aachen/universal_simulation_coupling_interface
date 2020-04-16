@@ -31,6 +31,25 @@ class Grid:
     def __str__(self):
         return f'{self.__class__.__name__}: number of nodes={len(self)}'
 
+    def get_node_values(self, value: str):
+        """
+        Function to get a dictionary including all nodes and the corresponding value. Any value, stored in the
+            node instance can be called.
+
+        Args:
+            value: value of interest
+
+        Returns:
+            dict of node: value pairs
+        """
+        
+        node_value_dict = {}
+
+        for node in self.nodes.values():
+            node_value_dict[node.node_number] = node.get_value(value)
+
+        return node_value_dict
+
     def add_node(self, node_number, x_coordinate, y_coordinate, z_coordinate=None, values=None):
         """
         Adding a node to the grid. Each node number must be used just once, otherwise an error is thrown.
