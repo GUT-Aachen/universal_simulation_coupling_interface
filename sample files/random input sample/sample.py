@@ -1,5 +1,5 @@
 import numpy
-import mesh_transition as mt
+import deprecated_mesh_transition as mt
 import random_mesh_input as rand
 import logging
 import sys

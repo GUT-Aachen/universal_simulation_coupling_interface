@@ -21,7 +21,7 @@ def create_boundary_condition(nset_dict, dataset, bc1, bc2=0):
     """
 
     function_name = 'create_boundary_condition'
-    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log = logging.getLogger('deprecated_abaqus_input.py.' + function_name)
     log.debug('Start function')
 
     if bc2 == 0:
@@ -74,7 +74,7 @@ def create_nodesets_all_list(nset_dict, assembly_name):
     """
 
     function_name = 'create_nodesets_all_list'
-    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log = logging.getLogger('deprecated_abaqus_input.py.' + function_name)
     log.debug('Start function')
 
     nset_list = {}
@@ -114,7 +114,7 @@ def create_nodesets_all(nodes, bc_name):
     """
 
     function_name = 'create_nodesets_all'
-    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log = logging.getLogger('deprecated_abaqus_input.py.' + function_name)
     log.debug('Start function')
 
     nodes = nodes.astype(int)
@@ -156,7 +156,7 @@ def write_inputfile(dict_bc, nset_list, input_file_name, job_name, output_path):
     """
     # FIXME Function description
     function_name = 'write_inputfile'
-    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log = logging.getLogger('deprecated_abaqus_input.py.' + function_name)
     log.debug('Start function')
 
     try:
@@ -221,7 +221,7 @@ def write_bashfile_windows(output_path, param_input, param_job, param_user, para
     """
 
     function_name = 'write_inputfile'
-    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log = logging.getLogger('deprecated_abaqus_input.py.' + function_name)
     log.debug('Start function')
 
     try:
@@ -308,7 +308,7 @@ def write_inputfile_restart(dict_bc, prev_input_file_path, step_name, job_name, 
     """
     # FIXME Function description
     function_name = 'write_inputfile_restart'
-    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log = logging.getLogger('deprecated_abaqus_input.py.' + function_name)
     log.debug('Start function')
 
     try:
@@ -420,7 +420,7 @@ def read_part_nodes (input_file_path, part_name):
     """
 
     function_name = 'read_part_nodes'
-    log = logging.getLogger('abaqus_input.py.' + function_name)
+    log = logging.getLogger('deprecated_abaqus_input.py.' + function_name)
     log.debug('Start function')
 
     try:

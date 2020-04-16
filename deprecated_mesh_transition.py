@@ -21,7 +21,7 @@ def read_pace3d(file_name, path=''):
         ndarray
     """
     function_name = 'read_pace3d'
-    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log = logging.getLogger('deprecated_mesh_transition.py.' + function_name)
     log.debug('Start function')
 
     try:
@@ -85,7 +85,7 @@ def read_abaqus(file_name, path=''):
     """
 
     function_name = 'read_abaqus'
-    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log = logging.getLogger('deprecated_mesh_transition.py.' + function_name)
     log.debug('Start function')
 
     try:
@@ -154,7 +154,7 @@ def write_abaqus(data, file_name, path=''):
     """
 
     function_name = 'write_abaqus'
-    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log = logging.getLogger('deprecated_mesh_transition.py.' + function_name)
     log.debug('Start function')
 
     try:
@@ -198,7 +198,7 @@ def write_pace3D(data, file_name, path=''):
     """
 
     function_name = 'write_pace3D'
-    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log = logging.getLogger('deprecated_mesh_transition.py.' + function_name)
     log.debug('Start function')
 
     try:
@@ -250,7 +250,7 @@ def transformation_validation(input_mesh, output_mesh, input_data):
     """
 
     function_name = 'transformation_validation'
-    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log = logging.getLogger('deprecated_mesh_transition.py.' + function_name)
     log.debug('Start function')
     log.info('Transforming validation will be started')
 
@@ -345,7 +345,7 @@ def mesh_transformation(input_mesh, output_mesh, input_data):
     """
 
     function_name = 'mesh_transformation'
-    log = logging.getLogger('mesh_transition.py.' + function_name)
+    log = logging.getLogger('deprecated_mesh_transition.py.' + function_name)
     log.debug('Start function')
     log.info('Transforming information from input mesh to output mesh')
 
