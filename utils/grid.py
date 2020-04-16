@@ -42,7 +42,7 @@ class Grid:
         Returns:
             dict of node: value pairs
         """
-        
+
         node_value_dict = {}
 
         for node in self.nodes.values():
