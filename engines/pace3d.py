@@ -9,7 +9,7 @@ class Pace3dEngine:
     def __init__(self):
         self.log = log.getLogger(self.__class__.__name__)
 
-    def read_pace3d(self, file: str, delimiter: str = ' '):
+    def read_csv_file(self, file: str, delimiter: str = ' '):
         """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
          Parameters:
@@ -21,7 +21,6 @@ class Pace3dEngine:
         """
 
         try:
-            # Replace backslashes by slashes
             file = Path(file)
 
             if not file.is_file():
