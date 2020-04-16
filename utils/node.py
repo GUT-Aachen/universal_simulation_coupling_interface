@@ -15,9 +15,9 @@ class Node:
     def __init__(self, node_number, x_coordinate, y_coordinate, z_coordinate=None, values=None):
         self.log = log.getLogger(self.__class__.__name__)
         self.node_number = node_number
-        self.coordinate_x = x_coordinate
-        self.coordinate_y = y_coordinate
-        self.coordinate_z = z_coordinate
+        self.x_coordinate = x_coordinate
+        self.y_coordinate = y_coordinate
+        self.z_coordinate = z_coordinate
         if isinstance(values, dict):
             self.values = values
         elif values:
@@ -37,10 +37,10 @@ class Node:
         Returns: A tuple of coordinates (x,y,z).
 
         """
-        if self.coordinate_z:
-            return self.coordinate_x, self.coordinate_y, self.coordinate_z
+        if self.z_coordinate:
+            return self.x_coordinate, self.y_coordinate, self.z_coordinate
         else:
-            return self.coordinate_x, self.coordinate_y, 0
+            return self.x_coordinate, self.y_coordinate, 0
 
     def get_value(self, value_name):
         """
@@ -55,12 +55,12 @@ class Node:
         """
 
         try:
-            if value_name == 'x':
-                return self.coordinate_x
-            elif value_name == 'y':
-                return self.coordinate_y
-            elif value_name == 'z':
-                return self.coordinate_z
+            if value_name == 'x' or value_name == 'x_coordinate':
+                return self.x_coordinate
+            elif value_name == 'y' or value_name == 'y_coordinate':
+                return self.y_coordinate
+            elif value_name == 'z' or value_name == 'z_coordinate':
+                return self.z_coordinate
             else:
                 return self.values[value_name]
         except KeyError as err:
@@ -79,10 +79,10 @@ class Node:
 
         """
         if value_name in self.values:
-            self.log.debug('%s updated to %f', value_name, value)
-            self.values[self.values] = value
+            self.values[value_name] = value
+            # self.log.debug(f'{value_name} updated to {value}')
             return 0
         else:
-            self.log.debug('%s added and set to %f', value_name, value)
-            self.values[self.values] = value
+            self.values[value_name] = value
+            # self.log.debug(f'{value_name} added and set to {value}')
             return 0
