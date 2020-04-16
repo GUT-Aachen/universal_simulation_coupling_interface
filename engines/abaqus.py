@@ -311,6 +311,18 @@ class AbaqusEngine:
             return 0
 
     def write_input_file(self, set_work_name: str, job_name: str):
+        """
+        This function modifies the initial input file and saves it in instances output folder with the name
+         'job_name'.inp. To modify the input file, spcific placeholders have to be placed in the initial input
+         file.
+
+        Args:
+            set_work_name (str): Name to load/save the set in instance
+            job_name (str): Name of the Abaqus job
+
+        Returns:
+            written input file (path)
+        """
 
         if set_work_name in self.node_set:
             if 'sets' in self.node_set[set_work_name] and 'boundary_conditions' in self.node_set[set_work_name]:
@@ -356,6 +368,21 @@ class AbaqusEngine:
 
     def write_input_file_restart(self, set_work_name: str, job_name: str, previous_input_file: str, step_name: str,
                                  restart_step: str, resume: bool = True):
+        """
+        This function modifies the previous input file and saves it in instances output folder with the name
+         'job_name'.inp. This new file is a Abaqus restart input file.
+
+        Args:
+            set_work_name: Name to load/save the set in instance
+            job_name: Name of the Abaqus job
+            previous_input_file: Path of the privious Abaqus input file
+            step_name: name of the step
+            restart_step: step from where to restart
+            resume: Tells if the simulation shall start from the beginning or if the last step shall be resumed.
+
+        Returns:
+
+        """
 
         if set_work_name in self.node_set:
             if 'sets' in self.node_set[set_work_name] and 'boundary_conditions' in self.node_set[set_work_name]:
@@ -581,18 +608,15 @@ class AbaqusEngine:
             with file.open('r') as csv_file:
                 read_csv = csv.reader(csv_file, delimiter=delimiter)
 
-                x = []
-                y = []
-                z = []
-                data_set = []
+                lines = []
 
                 for row in read_csv:
                     try:
                         if len(row) == 4:
-                            x.append(float(row[0]))
-                            y.append(float(row[1]))
-                            z.append(float(row[2]))
-                            data_set.append(float(row[3]))
+                            lines.append({'x_coordinate': float(row[0]),
+                                          'y_coordinate': float(row[1]),
+                                          'z_coordinate': float(row[2]),
+                                          'value': float(row[3])})
 
                         if len(row) != 4:
                             self.log.info(f'Empty row found or transition failed. Continue...')
@@ -600,9 +624,9 @@ class AbaqusEngine:
                     except Exception as err:
                         self.log.info(f'Empty row found or transition failed. Continue... [{err}]')
 
-                self.log.debug(f'{len(x)} rows read successfully', )
+                self.log.debug(f'{len(lines)} rows read successfully', )
 
-                return numpy.array([x, y, z, data_set])
+                return lines
 
         except Exception as err:
             self.log.error(f'File --{file}-- could not be read correctly [{err}]')
@@ -612,7 +636,7 @@ class AbaqusEngine:
         """ Function to write an csv-file-input from a given ndarray for the Software Simulia Abaqus
 
          Parameters:
-            data_array (ndarray): dataset
+            data_array (ndarray): data set
             file (str): filename including path
             delimiter (str), optional: delimiter used in ascii file
 
@@ -628,20 +652,16 @@ class AbaqusEngine:
                 self.log.error(f'Path to save file into {file.parent[0]} not found.')
                 raise FileNotFoundError
 
-            log.info(f'Write Abaqus-data-file: {file}')
+            self.log.info(f'Write Abaqus-data-file: {file}')
 
             # Writing data to csv-file
             numpy.savetxt(file, data_array, delimiter=delimiter, fmt='%11.8s')
 
-            return 0
+            return True
 
         except Exception as err:
-            log.error(f'Writing data in  --{file}-- not successful. [{err}]')
-            return -1
-
-        finally:
-            log.debug('Exit function')
-
+            self.log.error(f'Writing data in  --{file}-- not successful. [{err}]')
+            return False
 
     def preprocessing(self):  # TODO
         return 0
