@@ -401,7 +401,7 @@ class AbaqusEngine:
                         input_file_text.append(line)
 
             # Write new step
-            self.log.debug('Begin Step')
+            self.log.debug('Begin Step')  # TODO Possibility to modify step parameters
             input_file_text.append(f'** \n')
             input_file_text.append(f'** STEP:{step_name} \n')
             input_file_text.append(f'** \n')
