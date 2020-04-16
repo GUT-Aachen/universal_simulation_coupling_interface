@@ -1,8 +1,9 @@
 import logging as log
 import numpy
-from pathlib import Path, PurePath
+from pathlib import Path
 from utils.grid import Grid
 import os
+import csv
 
 
 class AbaqusEngine:
@@ -556,6 +557,57 @@ class AbaqusEngine:
             self.log.error('Batch file builder for Unix not implemented yet.')
         else:
             self.log.error('Using unknown system. No batch file builder available.')
+
+    def read_csv_file(self, file: str, delimiter: str = ','):
+        """ Function to read an csv-file-export from the Software Simulia Abaqus
+
+         Parameters:
+            file (str): filename including path
+            delimiter (str), optional: delimiter used in ascii file
+
+        Returns:
+            ndarray
+        """
+
+        try:
+            file = Path(file)
+
+            if not file.is_file():
+                self.log.error(f'File {file} not found.')
+                raise FileNotFoundError
+
+            self.log.info(f'Load Abaqus-Mesh-File: {file}')
+
+            with file.open('r') as csv_file:
+                read_csv = csv.reader(csv_file, delimiter=delimiter)
+
+                x = []
+                y = []
+                z = []
+                data_set = []
+
+                for row in read_csv:
+                    try:
+                        if len(row) == 4:
+                            x.append(float(row[0]))
+                            y.append(float(row[1]))
+                            z.append(float(row[2]))
+                            data_set.append(float(row[3]))
+
+                        if len(row) != 4:
+                            self.log.info(f'Empty row found or transition failed. Continue...')
+
+                    except Exception as err:
+                        self.log.info(f'Empty row found or transition failed. Continue... [{err}]')
+
+                self.log.debug(f'{len(x)} rows read successfully', )
+
+                return numpy.array([x, y, z, data_set])
+
+        except Exception as err:
+            self.log.error(f'File --{file}-- could not be read correctly [{err}]')
+            return 0
+
 
     def preprocessing(self):  # TODO
         return 0
