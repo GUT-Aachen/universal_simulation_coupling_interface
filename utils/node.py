@@ -44,7 +44,8 @@ class Node:
 
     def get_value(self, value_name):
         """
-        Get a particular value assigned to the node.
+        Get a particular value assigned to the node. In addition to the stored values it is also possible to
+        use 'x', 'y', or 'z' to get the corresponding coordinate.
 
         Args:
             value_name: name of the value
@@ -52,11 +53,19 @@ class Node:
         Returns: value, 0 if value_name not exists
 
         """
+
         try:
-            return self.values[value_name]
+            if value_name == 'x':
+                return self.coordinate_x
+            elif value_name == 'y':
+                return self.coordinate_y
+            elif value_name == 'z':
+                return self.coordinate_z
+            else:
+                return self.values[value_name]
         except KeyError as err:
             self.log.error(f'get_value() {err}')
-            return 0
+            return False
 
     def set_value(self, value_name, value):
         """
