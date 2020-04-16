@@ -14,7 +14,6 @@ class AbaqusEngine:
 
     def __init__(self, input_file):
         """
-
         Args:
             input_file: Complete path to the input file as String.
         """
@@ -381,7 +380,7 @@ class AbaqusEngine:
             resume: Tells if the simulation shall start from the beginning or if the last step shall be resumed.
 
         Returns:
-
+            written input file (path)
         """
 
         if set_work_name in self.node_set:
@@ -484,6 +483,16 @@ class AbaqusEngine:
             return 0
 
     def set_path(self, path_name, path):
+        """
+        Set paths, for example scratch or output path.
+
+        Args:
+            path_name: name of the path in instance
+            path: actual path
+
+        Returns:
+            boolean: true on success
+        """
         # Check if given path_name is valid
         if path_name not in self.paths:
             log.error(f'Given path_name ({path_name}) is not part of {self.paths}')
@@ -593,7 +602,7 @@ class AbaqusEngine:
             delimiter (str), optional: delimiter used in ascii file
 
         Returns:
-            ndarray
+            ndarray(dict)
         """
 
         try:
@@ -641,7 +650,7 @@ class AbaqusEngine:
             delimiter (str), optional: delimiter used in ascii file
 
         Returns:
-            boolean
+            boolean: true on success
         """
 
         try:
