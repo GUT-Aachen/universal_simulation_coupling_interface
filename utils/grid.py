@@ -1,6 +1,5 @@
 import logging as log
 from utils.node import Node
-import numpy
 
 
 class Grid:
@@ -52,7 +51,7 @@ class Grid:
             node instance can be called.
 
         Args:
-            value: value of interest
+            value_name: value of interest
 
         Returns:
             dict of node: value pairs
@@ -75,7 +74,7 @@ class Grid:
             return 0
 
         except KeyError as err:
-            log.error(f'Key {value} not found. {err}')
+            log.error(f'Key {value_name} not found. {err}')
             return 0
 
     def add_node(self, node_number, x_coordinate, y_coordinate, z_coordinate=None, values=None):
