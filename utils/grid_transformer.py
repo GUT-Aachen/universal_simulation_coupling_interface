@@ -109,7 +109,7 @@ class GridTransformer:
             transform_dict[grid_2_nodes[i]] = []
 
             # Loop through all neighbors and check distance
-            for k in range(len(dist[i])): # FIXME problems when only 1 neighbor is used, because no list in dist
+            for k in range(len(dist[i])):  # FIXME problems when only 1 neighbor is used, because no list in dist
                 node = grid_1_nodes[points[i][k]]
                 distance = dist[i][k]
 
