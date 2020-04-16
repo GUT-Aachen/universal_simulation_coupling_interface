@@ -1,5 +1,6 @@
 import logging as log
 from utils.node import Node
+import numpy
 
 
 class Grid:
@@ -31,7 +32,21 @@ class Grid:
     def __str__(self):
         return f'{self.__class__.__name__}: number of nodes={len(self)}'
 
-    def get_node_values(self, value: str):
+    def get_coordinates_array(self):
+        """
+        Returns a tuple of coordinates
+
+        Returns:
+            tuple of coordinates
+        """
+        coordinates = []
+
+        for node in self.nodes.values():
+            coordinates.append(node.coordinates)
+
+        return coordinates
+
+    def get_node_values(self, value_name: str):
         """
         Function to get a dictionary including all nodes and the corresponding value. Any value, stored in the
             node instance can be called.
@@ -42,13 +57,26 @@ class Grid:
         Returns:
             dict of node: value pairs
         """
+        try:
+            node_value_dict = {}
 
-        node_value_dict = {}
+            for node in self.nodes.values():
+                value = node.get_value(value_name)
+                if isinstance(value, int) or isinstance(value, float):
+                    node_value_dict[node.node_number] = node.get_value(value_name)
 
-        for node in self.nodes.values():
-            node_value_dict[node.node_number] = node.get_value(value)
+            if len(node_value_dict):
+                return node_value_dict
+            else:
+                return False
 
-        return node_value_dict
+        except Exception as err:
+            log.error(f'An error occured while reading values: {err}')
+            return 0
+
+        except KeyError as err:
+            log.error(f'Key {value} not found. {err}')
+            return 0
 
     def add_node(self, node_number, x_coordinate, y_coordinate, z_coordinate=None, values=None):
         """
@@ -94,7 +122,103 @@ class Grid:
         else:
             self.log.error(f'Node number {node_number} does not exist.')
 
+    def rename_value_set(self, old_name, new_name):
+        """
+        Rename a value in each nodes at a time.
+
+        Args:
+            old_name: Old name of the value
+            new_name: New name of the value
+
+        Returns:
+
+        """
+        try:
+            for node in self.nodes.values():
+                if old_name in node.values:
+                    node.values[new_name] = node.values[old_name]
+                    del(node.values[old_name])
+
+            return True
+        except Exception as err:
+            self.log.error(f'An error occurred while renaming values: {err}')
+            return False
+
+    def initiate_grid(self, data_set):
+        """
+        Initiate a new grid by transferring a dictionary including x/y/z-direction, values and optional node_number.
+
+        Args:
+            data_set: dict including grid information
+
+        Returns:
+            boolean: true on success
+        """
+
+        try:
+            if isinstance(data_set, list):
+
+                i = -1
+
+                for row in data_set:
+                    i += 1
+                    input_dict = {}
+
+                    if 'x_coordinate' in row:
+                        input_dict['x_coordinate'] = row['x_coordinate']
+                    else:
+                        self.log.error(f'No x_coordinate found in {row}')
+                        return False
+
+                    if 'y_coordinate' in row:
+                        input_dict['y_coordinate'] = row['y_coordinate']
+                    else:
+                        self.log.error(f'No y_coordinate found in {row}')
+                        return False
+
+                    if 'z_coordinate' in row:
+                        input_dict['z_coordinate'] = row['z_coordinate']
+
+                    if 'value' in row:
+                        input_dict['values'] = {'data': row['value']}
+
+                    if 'node_number' in row:
+                        input_dict['node_number'] = row['node_number']
+                    else:
+                        input_dict['node_number'] = i
+
+                    self.add_node(**input_dict)
+
+            self.log.info(f'Added {len(data_set)} nodes to the grid.')
+            return True
+
+        except Exception as err:
+            self.log.error(f'An error occurred while adding nodes to the grid. [{err}]')
+            return False
+
     def coordinates_exist(self, x_coordinate, y_coordinate, z_coordinate=None):
+        """
+        Checks whether the given coordinates are already assigned to a node. If so, the particular node_number will
+        be returned, otherwise return is 0.
+
+        Args:
+            x_coordinate: x coordinate
+            y_coordinate: y coordinate
+            z_coordinate: z coordinate (optional)
+
+        Returns: assigned node_number or 0
+
+        """
+        for node_number, node in self.nodes.items():
+            if z_coordinate:
+                if node.coordinates == (x_coordinate, y_coordinate, z_coordinate):
+                    return node_number
+            else:
+                if node.coordinates == (x_coordinate, y_coordinate, 0):
+                    return node_number
+        return 0
+
+    def find_node(self, x_coordinate, y_coordinate, z_coordinate=None):
         """
         Checks whether the given coordinates are already assigned to a node. If so, the particular node_number will
         be returned, otherwise return is 0.
