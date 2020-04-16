@@ -54,3 +54,34 @@ class Pace3dEngine:
         except Exception as err:
             self.log.error(f'File --{file}-- could not be read correctly [{err}]')
             return 0
+
+    def write_csv_file(self, data_array, file, delimiter: str = ' '):
+        """ Function to write an csv-file-input from a given ndarray for the Software Pace3D
+
+         Parameters:
+            data_array (ndarray): data set
+            file (str): filename including path
+            delimiter (str), optional: delimiter used in ascii file
+
+        Returns:
+            boolean
+        """
+
+        try:
+
+            file = Path(file)
+
+            if not Path(file.parent[0]).is_dir():
+                self.log.error(f'Path to save file into {file.parent[0]} not found.')
+                raise FileNotFoundError
+
+            self.log.info(f'Write pace3D-data-file: {file}')
+
+            # Writing data to csv-file
+            numpy.savetxt(file, data_array, delimiter=delimiter, fmt='%i %i %f')
+
+            return True
+
+        except Exception as err:
+            self.log.error(f'Writing data in  --{file}-- not successful. [{err}]')
+            return False
