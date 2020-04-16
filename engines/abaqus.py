@@ -29,6 +29,18 @@ class AbaqusEngine:
         # Read input file and save in an array
         self.data = self.input_file.read_text().split('\n')
 
+        # Set input file placeholder
+        self.placeholder_input_file = {'restart': '** restart_point_python_placeholder',
+                                       'nset': '** Nset_python_fill_in_placeholder',
+                                       'bc': '** bc_python_fill_in_placeholder'}
+
+        # Check if placeholders are present in input file
+        for text in self.placeholder_input_file.values():
+            if text not in self.data:
+                log.warning(f'To modify or create additional input files minor placeholders have to be set in the '
+                            f'initial input file. Otherwise errors will occure. The following placeholder is'
+                            f' missing: {text}')
+
         self.node_set = {}
         self.paths = {'output': Path(), 'scratch': Path()}
 
@@ -193,7 +205,7 @@ class AbaqusEngine:
                 nset_string = '*Nset, nset=' + name + ', instance=' + instance_name + '\n' + str(node) + ','
                 node_set_dict[int(node)] = nset_string
 
-            self.node_set[set_work_name] = {'sets': node_set_dict}
+            self.node_set[set_work_name]['sets'] = node_set_dict
             self.log.debug(f'Node sets created and saved successfully in .node_set[{set_work_name}][sets]')
 
             return node_set_dict
@@ -224,9 +236,12 @@ class AbaqusEngine:
                     node_set = 'node-' + str(node_number)
                     node_set_names_dict[node_number] = node_set
 
-                self.node_set[set_work_name] = {'set_names': node_set_names_dict}
-                self.log.debug(f'Node set names created and saved successfully in .node_set['
-                               f'{set_work_name}][set_names]')
+                if set_work_name not in self.node_set:
+                    self.node_set[set_work_name] = {}
+
+                self.node_set[set_work_name]['set_names'] = node_set_names_dict
+                self.log.debug(f'Node set names created and saved successfully in .node_set'
+                               f'[{set_work_name}][set_names]')
 
                 return node_set_names_dict
 
@@ -238,7 +253,7 @@ class AbaqusEngine:
             self.log.error(f'Grid expected but {grid} arrived.')
             return 0
 
-    def create_boundary_condition(self, set_work_name, node_values_dict, bc_1_name, bc_2_name=0):
+    def create_boundary_condition(self, set_work_name: str, node_values_dict: dict, bc_1_name: int, bc_2_name: int = 0):
         """ Function to create a dictionary consisting of all node number and abaqus boundary conditions. An
             entry of the the dictionary looks, due to bc1 = 8, for example like this: (node-234, 8, 8, 123456).
             If the second boundary condition is not set, the bc1 will be used twice, according to Abaqus manual.
@@ -255,7 +270,11 @@ class AbaqusEngine:
 
         # Check if the set_work_name exists in instance
         if set_work_name in self.node_set:
-            node_set_names_dict = self.node_set[set_work_name]['set_names']
+            if 'set_names' in self.node_set[set_work_name]:
+                node_set_names_dict = self.node_set[set_work_name]['set_names']
+            else:
+                self.log.error(f'"set_names" not found in {self.node_set[set_work_name].keys()}')
+                return 0
         else:
             self.log.error(f'Set_work_name {set_work_name} not found in {self.node_set.keys()}')
             return 0
@@ -290,8 +309,151 @@ class AbaqusEngine:
             self.log.error(str(err))
             return 0
 
-    def write_input_file(self):  # TODO
-        return 0
+    def write_input_file(self, set_work_name: str, job_name: str):
+
+        if set_work_name in self.node_set:
+            if 'sets' in self.node_set[set_work_name] and 'boundary_conditions' in self.node_set[set_work_name]:
+                node_sets_dict = self.node_set[set_work_name]['sets']
+                bc_dict = self.node_set[set_work_name]['boundary_conditions']
+            else:
+                self.log.error(f'Boundary conditions and/or node sets are not created in '
+                               f'set_work_name {set_work_name}. Use .create_boundary_condition() first.')
+                return 0
+        else:
+            self.log.error(f'Set_work_name {set_work_name} not found in {self.node_set.keys()}')
+            return 0
+
+        try:
+            input_file = self.paths['output'] / f'{job_name}.inp'
+
+            input_file_text = []
+
+            for line in self.data:
+
+                if '** Nset_python_fill_in_placeholder' in line:
+                    input_file_text.append('**Node sets for every single node created by Python \n')
+                    for node_set in node_sets_dict.values():
+                        input_file_text.append(f'{node_set} \n')
+
+                elif '** bc_python_fill_in_placeholder' in line:
+                    input_file_text.append('**Boundary conditions created by Python \n')
+                    input_file_text.append('*Boundary \n')
+                    for bc in bc_dict.values():
+                        input_file_text.append(f'{bc} \n')
+
+                else:
+                    input_file_text.append(f'{line} \n')
+
+            input_file.write_text(''.join(map(str, input_file_text)))
+            self.log.info(f'Abaqus input file created successfully and saved at {input_file}')
+
+            return input_file
+
+        except Exception as err:
+            self.log.error(str(err))
+            return 0
+
+    def write_input_file_restart(self, set_work_name: str, job_name: str, previous_input_file: str, step_name: str,
+                                 restart_step: str, resume: bool = True):
+
+        if set_work_name in self.node_set:
+            if 'sets' in self.node_set[set_work_name] and 'boundary_conditions' in self.node_set[set_work_name]:
+                bc_dict = self.node_set[set_work_name]['boundary_conditions']
+            else:
+                self.log.error(f'Boundary conditions and/or node sets are not created in '
+                               f'set_work_name {set_work_name}. Use .create_boundary_condition() first.')
+                return 0
+        else:
+            self.log.error(f'Set_work_name {set_work_name} not found in {self.node_set.keys()}')
+            return 0
+
+        try:
+            previous_input_file = Path(previous_input_file)
+            if not previous_input_file.is_file():
+                self.log.error(f'Previous input file cannot be found at {previous_input_file}')
+                return 0
+
+            # Read input file and save in an array
+            previous_input_file_data = previous_input_file.read_text().split('\n')
+
+            input_file = self.paths['output'] / f'{job_name}.inp'
+
+            input_file_text = []
+
+            copy_input_file = 0
+
+            # Write restart headline
+            self.log.debug('Write Header')
+            input_file_text.append(f'** Description: \n')
+            input_file_text.append(f'** Restart for input file: {previous_input_file} \n')
+            input_file_text.append(f'** ---------------------------------------------------------------- \n')
+            input_file_text.append(f'*Heading \n')
+            input_file_text.append(f'*Restart, read, step={str(restart_step)} \n')
+
+            # If the simulation shall not be resumed, all steps (but Geostatic-Step) will be copied
+            # into the new input file
+            if not resume:
+                for line in previous_input_file_data:
+                    if '** restart_point_python_placeholder' in line:
+                        copy_input_file = 1
+
+                    if copy_input_file:
+                        input_file_text.append(line)
+
+            # Write new step
+            self.log.debug('Begin Step')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'** STEP:{step_name} \n')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'*Step, name={step_name}, nlgeom=NO, amplitude=RAMP, inc=10000 \n')
+            input_file_text.append(f'*Soils, consolidation, end=PERIOD, utol=50000., creep=none \n')
+            input_file_text.append(f'6000., 43200., 1e-05, 6000., \n')
+
+            self.log.debug(f'Step: Adding boundary conditions')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'** BOUNDARY CONDITIONS \n')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'** Name: BC_PP Type: Pore pressure \n')
+
+            input_file_text.append(f'**Boundary conditions created by Python \n')
+            input_file_text.append(f'*Boundary \n')
+            for bc in bc_dict.values():
+                input_file_text.append(f'{bc} \n')
+
+            self.log.debug('Step: Adding output request')
+            input_file_text.append(f'** \n')
+            input_file_text.append('** OUTPUT REQUESTS' + '\n')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'** *Restart, write, frequency = 1 \n')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'** FIELD OUTPUT: F - Output - 1 \n')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'*Output, field \n')
+            input_file_text.append(f'*Node Output \n')
+            input_file_text.append(f'CF, COORD, POR, RF, U \n')
+            input_file_text.append(f'*Element Output, directions = YES \n')
+            input_file_text.append(f'FLUVR, LE, S, SAT, VOIDR, NFORC \n')
+            input_file_text.append(f'*Contact Output \n')
+            input_file_text.append(f'CDISP, CSTRESS, PFL \n')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'** HISTORY OUTPUT: H - Output - 1 \n')
+            input_file_text.append(f'** \n')
+            input_file_text.append(f'*Output, history, variable = PRESELECT \n')
+            input_file_text.append(f'*EL FILE, frequency=10000 \n')
+            input_file_text.append(f'COORD, VOIDR, POR \n')
+            input_file_text.append(f'*NODE FILE \n')
+            input_file_text.append(f'COORD \n')
+            input_file_text.append(f'*End Step \n')
+            self.log.debug(f'End Step')
+
+            input_file.write_text(''.join(map(str, input_file_text)))
+            self.log.info(f'Abaqus restart input file created successfully and saved at {input_file}')
+
+            return input_file
+
+        except Exception as err:
+            self.log.error(str(err))
+            return 0
 
     def set_path(self, path_name, path):
         # Check if given path_name is valid
@@ -316,7 +478,7 @@ class AbaqusEngine:
             return False
 
     def write_bash_file(self, input_file_path: str, user_subroutine_path: str = None, use_scratch_path: bool = False,
-                        additional_parameters: str = None, old_job_name:str = None):
+                        additional_parameters: str = None, old_job_name: str = None):
         """ Function to create bash file, depending on the subsystem (windows or linux) to execute Abaqus
             simulation in console.
 
