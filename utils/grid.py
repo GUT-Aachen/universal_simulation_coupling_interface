@@ -217,7 +217,10 @@ class Grid:
                         input_dict['z_coordinate'] = row['z_coordinate']
 
                     if 'value' in row:
-                        input_dict['values'] = {'data': row['value']}
+                        if value_name:
+                            input_dict['values'] = {value_name: row['value']}
+                        else:
+                            input_dict['values'] = {'data': row['value']}
 
                     if 'node_number' in row:
                         input_dict['node_number'] = row['node_number']
