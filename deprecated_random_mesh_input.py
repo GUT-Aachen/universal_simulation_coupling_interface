@@ -20,7 +20,7 @@ def random_numbers_range(min_val, max_val, sigma_percentage = 0.05):
         double
     """
     function_name = 'random_numbers_range'
-    log = logging.getLogger('random_mesh_input.py.' + function_name)
+    log = logging.getLogger('deprecated_random_mesh_input.py.' + function_name)
     #log.debug('Start function')
 
 
@@ -43,7 +43,7 @@ def random_numbers_range(min_val, max_val, sigma_percentage = 0.05):
         # log.debug('Exit function')
 
 
-def get_random_dataset(dataset, maximum, plot = False):
+def get_random_dataset(dataset, maximum, plot= False):
     """ Creates a ndarray of the size of the original dataset filled with random numbers. Random numbers boundaries are
         defined by the min/max-values of the given dataset influenced by the given offset.
 
@@ -57,7 +57,7 @@ def get_random_dataset(dataset, maximum, plot = False):
     """
 
     function_name = 'get_random_dataset'
-    log = logging.getLogger('random_mesh_input.py.' + function_name)
+    log = logging.getLogger('deprecated_random_mesh_input.py.' + function_name)
     log.debug('Start function')
 
     try:
