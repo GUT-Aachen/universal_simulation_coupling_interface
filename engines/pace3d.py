@@ -12,13 +12,13 @@ class Pace3dEngine:
     def read_csv_file(self, file: str, delimiter: str = ' '):
         """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
-         Parameters:
-            file (str): filename including path
-            delimiter (str), optional: delimiter used in ascii file
+                 Parameters:
+                    file (str): filename including path
+                    delimiter (str), optional: delimiter used in ascii file
 
-        Returns:
-            ndarray
-        """
+                Returns:
+                    ndarray(dict)
+                """
 
         try:
             file = Path(file)
@@ -27,29 +27,30 @@ class Pace3dEngine:
                 self.log.error(f'File {file} not found.')
                 raise FileNotFoundError
 
-            self.log.info(f'Load Pace3D-File: {file}')
+            self.log.info(f'Load Pace3D-Mesh-File: {file}')
 
             with file.open('r') as csv_file:
                 read_csv = csv.reader(csv_file, delimiter=delimiter)
 
-                x = []
-                y = []
-                z = []
-                data_set = []
+                lines = []
 
                 for row in read_csv:
                     try:
-                        x.append(float(row[0]))
-                        y.append(float(row[1]))
-                        z.append(float(row[2]))
-                        data_set.append(float(row[3]))
+                        if len(row) == 4:
+                            lines.append({'x_coordinate': float(row[0]),
+                                          'y_coordinate': float(row[1]),
+                                          'z_coordinate': float(row[2]),
+                                          'value': float(row[3])})
+
+                        if len(row) != 4:
+                            self.log.info(f'Empty row found or transition failed. Continue...')
 
                     except Exception as err:
-                        self.log.debug('Empty row found and ignored. Continue... [%s]', str(err))
+                        self.log.info(f'Empty row found or transition failed. Continue... [{err}]')
 
-                self.log.info(f'{len(data_set)} rows read successfully')
+                self.log.debug(f'{len(lines)} rows read successfully', )
 
-                return numpy.array([x, y, z, data_set])
+                return lines
 
         except Exception as err:
             self.log.error(f'File --{file}-- could not be read correctly [{err}]')
