@@ -9,23 +9,28 @@ class IterationsDict(dict):
         super().__init__(*args, **kwargs)
         self.log = log.getLogger(self.__class__.__name__)
 
-    def add_iteration_step(self, iteration_name):
+    def add_iteration_step(self, iteration_name, step_no=None):
         if iteration_name in self:
             self.log.error(f'Step with the same name ({iteration_name}) already exists.')
             return 0
         else:
-            self[iteration_name] = IterationStep(iteration_name)
+            if not isinstance(step_no, int):
+                step_no = len(self)
+
+            self[iteration_name] = IterationStep(iteration_name, step_no)
             return self[iteration_name]
 
 
 class IterationStep:
-    def __init__(self, iteration_name):
+    def __init__(self, iteration_name, step_no):
         self.log = log.getLogger(self.__class__.__name__)
         self.grid = Grid()
         self.name = iteration_name
         self.computing_time = None
         self.time = None
         self.path = Path()
+        self.step_no = step_no
+        self.log.debug(f'New iteration step initialized. name={self.name}; step_no={self.step_no}')
 
     @property
     def get_grid(self):
