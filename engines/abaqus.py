@@ -310,7 +310,7 @@ class AbaqusEngine:
             self.log.error(str(err))
             return 0
 
-    def write_input_file(self, set_work_name: str, job_name: str):
+    def write_input_file(self, set_work_name: str, job_name: str, path):
         """
         This function modifies the initial input file and saves it in instances output folder with the name
          'job_name'.inp. To modify the input file, spcific placeholders have to be placed in the initial input
@@ -319,6 +319,7 @@ class AbaqusEngine:
         Args:
             set_work_name (str): Name to load/save the set in instance
             job_name (str): Name of the Abaqus job
+            path (Path):  Where to save input-file
 
         Returns:
             written input file (path)
@@ -337,7 +338,7 @@ class AbaqusEngine:
             return 0
 
         try:
-            input_file = self.paths['output'] / f'{job_name}.inp'
+            input_file = path / f'{job_name}.inp'
 
             input_file_text = []
 
@@ -515,12 +516,13 @@ class AbaqusEngine:
             self.log.error(str(err))
             return False
 
-    def write_bash_file(self, input_file_path: str, user_subroutine_path: str = None, use_scratch_path: bool = False,
+    def write_bash_file(self, path: Path, input_file_path: str, user_subroutine_path: str = None, use_scratch_path: bool = False,
                         additional_parameters: str = None, old_job_name: str = None):
         """ Function to create bash file, depending on the subsystem (windows or linux) to execute Abaqus
             simulation in console.
 
          Parameters:
+            path (Path): Where to save the bash file
             input_file_path (str): Input filename including path
             user_subroutine_path (str): User subroutine filename including path (optional)
             use_scratch_path (bool): Shall a scratch folder be used. Folder has to be defined via function
@@ -531,11 +533,6 @@ class AbaqusEngine:
         Returns:
             bash_file_name (String)
         """
-
-        # Check if output path is set
-        if not self.paths['output'].is_dir():
-            self.log.error(f'Output path must be set first via function .set_path("output", str)')
-            return False
 
         if os.name == 'nt':
             self.log.debug('Running on a windows system. Creating windows bash file.')
@@ -553,7 +550,7 @@ class AbaqusEngine:
 
                 # Create job name from input file'
                 job_name = input_file.name[:-len(input_file.suffix)]
-                bash_file = self.paths['output'] / f'{job_name}.bat'
+                bash_file = path / f'{job_name}.bat'
 
                 # Create the command line for the bash file according to given function input parameters.
                 cmd_string = f'call abaqus job={job_name} input={input_file}'
