@@ -32,6 +32,13 @@ class IterationStep:
         self.step_no = step_no
         self.log.debug(f'New iteration step initialized. name={self.name}; step_no={self.step_no}')
 
+    def get_path(self):
+        return self.path
+
+    @property
+    def get_name(self):
+        return self.name
+
     @property
     def get_grid(self):
         return self.grid
@@ -43,10 +50,6 @@ class IterationStep:
     @property
     def computing_time(self):
         return self.computing_time
-
-    @property
-    def path(self):
-        return self.path
 
     def __str__(self):
         return f'name={self.name} grid-size={len(self.grid)} '
@@ -80,12 +83,8 @@ class IterationStep:
         if not path.is_dir():
             path.mkdir()
             self.path = path
-            return True
+            return path
         if not path.is_dir():
             self.log.error(f'Subfolder does not exist and can not be created. {path}')
             raise FileNotFoundError
-
-    @path.setter
-    def path(self, value):
-        self._path = value
 
