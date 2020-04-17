@@ -59,7 +59,7 @@ class GridTransformer:
             return True
 
     def find_nearest_neighbors(self, grid_name_1: str, grid_name_2: str, neighbors_quantity: int = 10,
-                               distance_max: int = None):
+                               distance_max: float = None):
         """
         To tranfer the data from one grid to another a modified nearest neighbor approach is used. This method takes
         the coordinates of each point in two grids and searches for nearest neighbors. Thereby the first grid is the
