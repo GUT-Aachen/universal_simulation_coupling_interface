@@ -21,6 +21,7 @@ class AbaqusEngine:
 
         self.input_file = Path(input_file)
         if not self.input_file.is_file():
+            self.log.error(f'Cannot find input_file {input_file}')
             raise FileNotFoundError
         if not self.input_file.suffix == '.inp':
             self.log.error(f'Expected an Simulia Abaqus Inputfile with .inp suffix instead of {self.input_file.suffix}')
