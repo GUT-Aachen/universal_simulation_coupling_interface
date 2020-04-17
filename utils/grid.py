@@ -31,6 +31,22 @@ class Grid:
     def __str__(self):
         return f'{self.__class__.__name__}: number of nodes={len(self)}'
 
+    def get_available_values(self):
+        """
+        Returns a list of available names for values in grid instance.
+
+        Returns:
+            list: available value_names in grid
+        """
+        str_output = []
+
+        for node in self.nodes.values():
+            for value_name in node.values.keys():
+                str_output.append(value_name)
+            break
+
+        return str_output
+
     def get_coordinates_array(self):
         """
         Returns a tuple of coordinates
@@ -44,6 +60,28 @@ class Grid:
             coordinates.append(node.coordinates)
 
         return coordinates
+
+    def set_node_values(self, value_name: str, node_dict: dict, ):
+        """
+        Saving value-node-combinations from a dictionary to the nodes in the grid.
+
+        Args:
+            node_dict (dict): dictionary consisting of node_number:value combinations
+            value_name (str): name for the value
+
+        Returns:
+            boolean: true on success
+        """
+        # Check if nodes included in dict fits with grid
+        for node_number in node_dict.keys():
+            if node_number not in self.nodes.keys():
+                self.log.error(f'At least one node from input (node {node_number}) is not available in this grid.')
+                raise ValueError
+
+        for node_number, value in node_dict.items():
+            self.nodes[node_number].set_value(value_name, value)
+
+        return True
 
     def get_node_values(self, value_name: str):
         """
