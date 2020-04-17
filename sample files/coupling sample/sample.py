@@ -1,6 +1,6 @@
 import numpy
 import deprecated_mesh_transition as mt
-import random_mesh_input as rand
+import deprecated_random_mesh_input as rand
 import deprecated_abaqus_input as inp
 import shutil
 import os
