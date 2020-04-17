@@ -186,7 +186,7 @@ class GridTransformer:
             result = factor / sum_distance
             target_grid['grid'].nodes[node].set_value(value_name, result)
 
-        self.log.info(f'Transition for {value_name} from {src_grid_name} to {target_grid_name}')
+        self.log.info(f'Transition for {value_name} from {src_grid_name} to {target_grid_name} successful')
         return True
 
     def nearest_neighbors_stat(self, grid_name):
