@@ -26,7 +26,7 @@ class EnginesHandler:
             parameter (dict): Dictionary including parameters
 
         Returns:
-            boolean: true on success
+            specific engine: for example AbaqusEngine()
         """
 
         if self.engine:
@@ -35,7 +35,7 @@ class EnginesHandler:
 
         if self.engine_name == 'abaqus':
             if 'input_file' in parameter:
-                AbaqusEngine(parameter['input_file'])
+                engine = AbaqusEngine(parameter['input_file'])
             else:
                 self.log.error(f'Missing parameter "input_file" in parameters: {parameter}')
                 raise TypeError
@@ -45,7 +45,7 @@ class EnginesHandler:
             raise TypeError
 
         self.log.info(f'Engine {self.engine_name} successfully initialized')
-        return True
+        return engine
 
     def path_cleanup(self, path_name, recreate_missing=True):
         """
