@@ -181,12 +181,13 @@ class Grid:
             self.log.error(f'An error occurred while renaming values: {err}')
             return False
 
-    def initiate_grid(self, data_set):
+    def initiate_grid(self, data_set, value_name=None):
         """
         Initiate a new grid by transferring a dictionary including x/y/z-direction, values and optional node_number.
 
         Args:
             data_set: dict including grid information
+            value_name: name of the values
 
         Returns:
             boolean: true on success
