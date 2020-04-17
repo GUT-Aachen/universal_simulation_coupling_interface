@@ -4,6 +4,8 @@ from utils.iterationStep import IterationsDict
 import shutil
 import time
 from engines.abaqus import AbaqusEngine
+from engines.pace3d import Pace3dEngine
+import subprocess
 
 
 class EnginesHandler:
@@ -40,11 +42,15 @@ class EnginesHandler:
                 self.log.error(f'Missing parameter "input_file" in parameters: {parameter}')
                 raise TypeError
 
+        elif self.engine_name == 'pace3d':
+            engine = Pace3dEngine()
+
         else:
             self.log.error(f'Engine {self.engine_name} is unknown.')
             raise TypeError
 
         self.log.info(f'Engine {self.engine_name} successfully initialized')
+        self.engine = engine
         return engine
 
     def path_cleanup(self, path_name, recreate_missing=True):
@@ -69,7 +75,7 @@ class EnginesHandler:
         # Remove and recreate path
         if path.is_dir():
             shutil.rmtree(path)
-            time.sleep(0.1)
+            time.sleep(0.5)
             path.mkdir()
             self.log.info(f'Cleaned up path {path}')
         # FIXME Recreate only betroffene folder
@@ -77,7 +83,7 @@ class EnginesHandler:
             # Check if all paths in self.path are exist, otherwise create.
             for name, path in self.paths.items():
                 if not path.is_dir():
-                    time.sleep(0.1)
+                    time.sleep(0.5)
                     path.mkdir()
                     self.log.info(f'Recreated path for {name} at {path}')
 
@@ -116,7 +122,6 @@ class EnginesHandler:
             if not path.is_dir():
 
                 if create_missing:
-                    time.sleep(0.1)
                     if path.mkdir():
                         self.log.info(f'Path {path} generated.')
                         self.paths[path_name] = path
@@ -125,7 +130,14 @@ class EnginesHandler:
 
                     else:
                         # Another try
-                        self.log.error(f'Not able to create path {path}.')
+                        if path.mkdir():
+                            self.log.info(f'Path {path} generated.')
+                            self.paths[path_name] = path
+                            self.log.debug(f'Checked and added path {path}')
+                            return True
+                        else:
+                            # Another try
+                            self.log.error(f'Not able to create path {path}')
                 else:
                     self.log.warning(f'Path {path} does not exist.')
                     raise FileNotFoundError
@@ -153,7 +165,7 @@ class EnginesHandler:
             return self.paths[path_name]
 
         except KeyError as err:
-            self.log.error(f'Error occured while reading path {path_name}. {err}')
+            self.log.error(f'Error occurred while reading path {path_name}. {err}')
             raise KeyError
 
     def set_file(self, file_name, file):
@@ -182,7 +194,7 @@ class EnginesHandler:
                 raise FileNotFoundError
 
         except FileNotFoundError as err:
-            self.log.error(f'Error occured while setting file {file} as {file_name}. {err}')
+            self.log.error(f'Error occurred while setting file {file} as {file_name}. {err}')
             raise FileNotFoundError
 
     def get_file(self, file_name):
@@ -200,4 +212,10 @@ class EnginesHandler:
 
         except KeyError as err:
             self.log.error(f'Error occured while reading file {file_name}. {err}')
-            raise KeyError
+            return False
+
+    def call_subprocess(self, bash_file, cwd_folder):
+        self.log.debug(f'Start simulation with {bash_file}')
+        subprocess.call(bash_file, shell=True, cwd=cwd_folder)
+        self.log.debug('Simulation ended')
+        return True
