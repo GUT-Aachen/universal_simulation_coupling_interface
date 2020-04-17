@@ -1,6 +1,6 @@
 import numpy
 import deprecated_mesh_transition as mt
-import random_mesh_input as randH
+import deprecated_random_mesh_input as randH
 import logging
 import sys
 
