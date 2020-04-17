@@ -73,12 +73,12 @@ class IterationStep:
         path = parent_folder / sub_folder
 
         if not path.is_dir():
-            if path.mkdir():
-                self.path = path
-                return True
-            else:
-                self.log.error('Subfolder does not exist and can not be created.')
-                raise FileNotFoundError
+            path.mkdir()
+            self.path = path
+            return True
+        if not path.is_dir():
+            self.log.error(f'Subfolder does not exist and can not be created. {path}')
+            raise FileNotFoundError
 
     @path.setter
     def path(self, value):
