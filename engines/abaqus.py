@@ -207,7 +207,7 @@ class AbaqusEngine:
                 node_set_dict[int(node)] = nset_string
 
             self.node_set[set_work_name]['sets'] = node_set_dict
-            self.log.debug(f'Node sets created and saved successfully in .node_set[{set_work_name}][sets]')
+            self.log.debug(f'Node sets created and stored successfully in .node_set[{set_work_name}][sets]')
 
             return node_set_dict
 
@@ -300,7 +300,7 @@ class AbaqusEngine:
                 bc_str = f'{node_set_names_dict[node_number]}, {bc_1_name}, {bc_2_name}, {value}'
                 bc_dict[node_number] = bc_str
 
-            self.log.debug(f'Boundary conditions created and saved successfully in .node_set[{set_work_name}]'
+            self.log.debug(f'Boundary conditions created and stored successfully in .node_set[{set_work_name}]'
                            f'[boundary_conditions].')
 
             self.node_set[set_work_name]['boundary_conditions'] = bc_dict
