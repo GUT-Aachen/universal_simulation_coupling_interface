@@ -1,5 +1,6 @@
 import logging as log
 from utils.grid import Grid
+from pathlib import Path
 
 
 class IterationsDict(dict):
@@ -24,6 +25,7 @@ class IterationStep:
         self.name = iteration_name
         self.computing_time = None
         self.time = None
+        self.path = Path()
 
     @property
     def get_grid(self):
@@ -37,6 +39,10 @@ class IterationStep:
     def computing_time(self):
         return self.computing_time
 
+    @property
+    def path(self):
+        return self.path
+
     def __str__(self):
         return f'name={self.name} grid-size={len(self.grid)} '
 
@@ -49,3 +55,32 @@ class IterationStep:
     @computing_time.setter
     def computing_time(self, value):
         self._computing_time = value
+
+    def create_step_folder(self, parent_folder):
+        """
+        Creating subfolder where additional files for this step are stored.
+
+        Args:
+            parent_folder (str, Path): Path or string of path of the parent folder
+
+        Returns:
+            boolean: true on success
+        """
+        parent_folder = Path(parent_folder)
+
+        sub_folder = f'step_{self.name}'
+
+        path = parent_folder / sub_folder
+
+        if not path.is_dir():
+            if path.mkdir():
+                self.path = path
+                return True
+            else:
+                self.log.error('Subfolder does not exist and can not be created.')
+                raise FileNotFoundError
+
+    @path.setter
+    def path(self, value):
+        self._path = value
+
