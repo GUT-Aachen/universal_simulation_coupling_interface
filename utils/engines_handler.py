@@ -217,5 +217,5 @@ class EnginesHandler:
     def call_subprocess(self, bash_file, cwd_folder):
         self.log.debug(f'Start simulation with {bash_file}')
         subprocess.call(bash_file, shell=True, cwd=cwd_folder)
-        self.log.debug('Simulation ended')
+        self.log.debug('End simulation')
         return True
