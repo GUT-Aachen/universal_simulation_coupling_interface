@@ -88,20 +88,14 @@ class SimulationHandler:
 
         try:
             path = Path(path)
+
+            # Check if path is a file or folder
             if path.is_file():
                 self.log.error(f'Given path is a file. Path empty excepted.')
                 raise TypeError
 
+            # Check if path exists
             if not path.is_dir():
-
-                # Check if path is empty
-                if not any(path.iterdir()) and path_name == 'output':
-                    if not cleanup:
-                        self.log.warning(f'Path exists but is not empty. Set option cleanup=True for deleting any files '
-                                       f'or paths containing this folder. path:{path}')
-                    else:
-                        if self.output_path_cleanup():
-                            return True
 
                 if create_missing:
                     if path.mkdir():
@@ -126,8 +120,19 @@ class SimulationHandler:
                     raise NotADirectoryError
 
             else:
+                # Check if path is empty
+                if not any(path.iterdir()) and path_name == 'output':
+                    if not cleanup:
+                        self.log.warning(
+                            f'Path exists but is not empty. Set option cleanup=True for deleting any files '
+                            f'or paths containing this folder. path:{path}')
+                    else:
+                        if self.output_path_cleanup():
+                            return True
+
                 self.paths[path_name] = path
                 self.log.debug(f'Checked and added path {path}')
+
                 return True
 
         except FileNotFoundError as err:
