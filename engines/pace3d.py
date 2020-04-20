@@ -5,7 +5,8 @@ import numpy
 
 
 class Pace3dEngine:
-
+    """ Specific class to handle Pace 3D simulation software from the IDM HS Karlsruhe Germany.
+    """
     def __init__(self):
         self.log = log.getLogger(self.__class__.__name__)
 
