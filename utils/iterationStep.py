@@ -17,19 +17,21 @@ class IterationsDict(dict):
             if not isinstance(step_no, int):
                 step_no = len(self)
 
+            self.log.debug(f'Added new iteration step: {iteration_name}')
             self[iteration_name] = IterationStep(iteration_name, step_no)
             return self[iteration_name]
 
 
 class IterationStep:
     def __init__(self, iteration_name, step_no):
-        self.log = log.getLogger(self.__class__.__name__)
+
         self.grid = Grid()
         self.name = iteration_name
         self.computing_time = None
         self.time = None
         self.path = Path()
         self.step_no = step_no
+        self.log = log.getLogger(f'{self.__class__.__name__}:{step_no}_{iteration_name}')
         self.log.debug(f'New iteration step initialized. name={self.name}; step_no={self.step_no}')
 
     def get_path(self):
