@@ -1,11 +1,10 @@
 import logging
 import sys
 from pathlib import Path
-import pprint
 from utils.grid_transformer import GridTransformer
 from utils.simulation_handler import SimulationHandler
 
-root_directory = Path('D:\Abaqus_Work_2019\Abaqus-Pace3D-Transition.old')
+root_directory = Path('C:/Users/Sven F. Biebricher/Desktop/Abaqus-Pace3D-Transition.old')
 
 # #################################################################################
 # Initialize the logger: logging class
@@ -60,7 +59,7 @@ abaqus.set_path('scratch', abaqus.get_path('output') / 'scratch')
 abaqus.set_path('scratch', abaqus.get_path('output') / 'scratch')
 abaqus.set_file('subroutine', abaqus.get_path('input') / abaqus_subroutine_file_name)
 
-number_of_iterations = 1
+number_of_iterations = 3
 abaqus_part_name = 'Part-1'
 
 # Log environmental variables
@@ -80,13 +79,8 @@ step_name = 'initial'
 actual_step = sim.add_iteration_step(step_name)
 actual_step['abaqus'].create_step_folder(abaqus.get_path('output'))
 
-# Load Abaqus nodes and coordinates from input file
-log.info(f'Read Abaqus node and coordinates for part {abaqus_part_name}')
-
 abaqus.init_engine({'input_file': abaqus.get_path('input') / f'{sim.name}.inp'})
 pace3d.init_engine()
-# parts = abaqus.engine.get_part_names()
-# instances = abaqus.engine.get_instance_names()
 actual_step['abaqus'].grid.initiate_grid(abaqus.engine.get_nodes('Part-1'))
 
 abaqus.engine.paths['scratch'] = abaqus.get_path('scratch')
@@ -112,7 +106,7 @@ else:
     log.debug(f'Setting constant for initial pore pressure.')
     # TODO
     # abaqus.engine.create_boundary_condition('PP', actual_step.grid.get_node_values('pore_pressure'), 8)
-    #bc_dict = inp.create_boundary_condition(nset_dict, [abaqus_mesh[3], abaqus_pore_pressure_value], 8)
+    # bc_dict = inp.create_boundary_condition(nset_dict, [abaqus_mesh[3], abaqus_pore_pressure_value], 8)
 
 # Write input- and bash-file
 # Current job name consists of abaqus_job_name and current step name
@@ -180,5 +174,3 @@ for x in range(0, number_of_iterations):
     sim.call_subprocess(abaqus.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
     sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
-
-exit()
