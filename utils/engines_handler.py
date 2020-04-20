@@ -11,13 +11,13 @@ import subprocess
 class EnginesHandler:
 
     def __init__(self, engine):
-        self.log = log.getLogger(self.__class__.__name__)
-
         self.engine_name = engine
         self.engine = None
         self.iterations = IterationsDict()
         self.paths = {}
         self.files = {}
+
+        self.log = log.getLogger(f'{self.__class__.__name__}:{self.engine_name}')
 
     def init_engine(self, parameter: dict = {}):
         """
@@ -115,36 +115,31 @@ class EnginesHandler:
         """
         try:
             path = Path(path)
+
             if path.is_file():
-                self.log.error(f'Given path is a file. Use .set_file() instead.')
+                self.log.error(f'Given path {path} is a file. Use .set_file() instead.')
                 raise TypeError
 
             if not path.is_dir():
-
                 if create_missing:
-                    if path.mkdir():
-                        self.log.info(f'Path {path} generated.')
+                    path.mkdir()
+
+                    if path.is_dir():
+                        self.log.debug(f'Path {path_name} generated:{path}')
                         self.paths[path_name] = path
-                        self.log.debug(f'Checked and added path {path}')
+                        self.log.debug(f'Checked and added path {path_name} : {path}')
                         return True
 
                     else:
-                        # Another try
-                        if path.mkdir():
-                            self.log.info(f'Path {path} generated.')
-                            self.paths[path_name] = path
-                            self.log.debug(f'Checked and added path {path}')
-                            return True
-                        else:
-                            # Another try
-                            self.log.error(f'Not able to create path {path}')
+                        self.log.error(f'Not able to create path {path_name} : {path}')
+
                 else:
                     self.log.warning(f'Path {path} does not exist.')
                     raise FileNotFoundError
 
             else:
                 self.paths[path_name] = path
-                self.log.debug(f'Checked and added path {path}')
+                self.log.debug(f'Checked and added path {path_name} : {path}')
                 return True
 
         except FileNotFoundError as err:
@@ -187,7 +182,7 @@ class EnginesHandler:
 
             if file.is_file():
                 self.files[file_name] = file
-                self.log.debug(f'Checked and added file {file}')
+                self.log.debug(f'Checked and added file {file_name} : {file}')
                 return True
             else:
                 self.log.error(f'File {file} not found.')
@@ -213,9 +208,3 @@ class EnginesHandler:
         except KeyError as err:
             self.log.error(f'Error occured while reading file {file_name}. {err}')
             return False
-
-    def call_subprocess(self, bash_file, cwd_folder):
-        self.log.debug(f'Start simulation with {bash_file}')
-        subprocess.call(bash_file, shell=True, cwd=cwd_folder)
-        self.log.debug('End simulation')
-        return True
