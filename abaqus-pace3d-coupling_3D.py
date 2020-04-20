@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from utils.grid_transformer import GridTransformer
 from utils.simulation_handler import SimulationHandler
+import pprint
 
 root_directory = Path('D:\Abaqus_Work_2019\Abaqus-Pace3D-Transition')
 
@@ -32,6 +33,7 @@ simulation_name = 'M3-200407'
 number_of_iterations = 2
 abaqus_part_name = 'Reservoir-1-Crop'
 abaqus_assembly_name = 'Reservoir-1-Crop-1'
+abaqus_pore_pressure_value = 62000000  # Constant pore pressure value in N/m²
 
 # Initialize simulation handler
 sim = SimulationHandler(simulation_name)
@@ -53,7 +55,7 @@ pace3d_pore_pressure_initial_file_name = 'pace3D_pore-pressure_initial.dat'
 pace3d.set_path('input', sim.get_input_path())
 pace3d.set_path('output', sim.get_output_path() / 'pace3d')
 pace3d.set_file('pore_pressure', pace3d.get_path('input') / pace3d_pore_pressure_file_name)
-pace3d.set_file('initial_pore_pressure', pace3d.get_path('input') / pace3d_pore_pressure_initial_file_name)
+# pace3d.set_file('initial_pore_pressure', pace3d.get_path('input') / pace3d_pore_pressure_initial_file_name)
 
 # Set Abaqus paths and files
 abaqus.set_path('input', sim.get_input_path())
@@ -101,12 +103,16 @@ if pace3d.get_file('initial_pore_pressure'):
     transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
 
-    abaqus.engine.create_boundary_condition('PP', actual_step['abaqus'].grid.get_node_values('pore_pressure'), 8)
 else:
     log.debug(f'Setting constant for initial pore pressure.')
-    # TODO
-    # abaqus.engine.create_boundary_condition('PP', actual_step.grid.get_node_values('pore_pressure'), 8)
-    # bc_dict = inp.create_boundary_condition(nset_dict, [abaqus_mesh[3], abaqus_pore_pressure_value], 8)
+    # Get dict of empty nodes
+    nodes_dict = actual_step['abaqus'].grid.get_empty_nodes()
+    # Set pore pressure values to nodes
+    for node_number in nodes_dict.keys():
+        nodes_dict[node_number] = abaqus_pore_pressure_value
+    actual_step['abaqus'].grid.set_node_values('pore_pressure', nodes_dict)
+
+abaqus.engine.create_boundary_condition('PP', actual_step['abaqus'].grid.get_node_values('pore_pressure'), 8)
 
 # Write input- and bash-file
 # Current job name consists of abaqus_job_name and current step name
