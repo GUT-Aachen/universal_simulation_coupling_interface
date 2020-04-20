@@ -5,6 +5,8 @@ import shutil
 import time
 from engines.abaqus import AbaqusEngine
 from engines.pace3d import Pace3dEngine
+from utils.iterationStep import IterationStep
+import copy
 
 
 class EnginesHandler:
@@ -12,7 +14,7 @@ class EnginesHandler:
     def __init__(self, engine):
         self.engine_name = engine
         self.engine = None
-        self.iterations = IterationsDict()
+        self.iterations = []  # IterationsDict()
         self.paths = {}
         self.files = {}
 
@@ -51,6 +53,40 @@ class EnginesHandler:
         self.log.info(f'Engine {self.engine_name} successfully initialized')
         self.engine = engine
         return engine
+
+    def add_iteration_step(self, iteration_name, previous_copy=False):
+
+        step_no = len(self.iterations)
+        step_name_exists = False
+
+        for iterations in self.iterations:
+            if iterations.name == iteration_name:
+                step_name_exists = True
+
+        if step_name_exists:
+            self.log.error(f'Step with the same name ({iteration_name}) already exists.')
+            raise KeyError
+        else:
+            if previous_copy:
+                previous_iteration = self.iterations[len(self.iterations) - 1]
+                current_iteration = copy.deepcopy(previous_iteration)
+                self.iterations.append(current_iteration)
+
+                previous_iteration_name = previous_iteration.name
+
+                current_iteration.name = iteration_name
+                current_iteration.step_no = step_no
+
+                self.log.debug(f'Added copy of previous iteration step "{previous_iteration_name}" with new '
+                               f'name "{iteration_name}"')
+                return current_iteration  # self.iterations[step_no]
+            else:
+                self.iterations.append(IterationStep(iteration_name, step_no))
+                self.log.debug(f'Added new iteration step: {iteration_name}')
+                return self.iterations[step_no]
+
+    def get_latest_iteration_step(self):
+        return self.iterations[len(self.iterations) - 1]
 
     def path_cleanup(self, path_name, recreate_missing=True):
         """
