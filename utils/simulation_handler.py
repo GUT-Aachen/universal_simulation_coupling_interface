@@ -17,6 +17,54 @@ class SimulationHandler:
 
         self.log.debug(f'Initialized simulation handler for {self.name}')
 
+        self.iterations = []
+
+    def add_iteration_step(self, step_name, copy_previous=False):
+
+        if len(self.engines) == 0:
+            self.log.error(f'Before adding an iteration step, engines must be initialized!')
+            raise ValueError
+
+        steps = {}
+
+        for engine in self.engines.values():
+            steps[engine.engine_name] = engine.add_iteration_step(step_name, copy_previous)
+
+        self.iterations.append(step_name)
+
+        return steps
+
+    def get_current_iterations(self):
+
+        if len(self.iterations) > 0:
+
+            steps = {}
+
+            for engine in self.engines.values():
+                steps[engine.engine_name] = engine.iterations[len(engine.iterations) - 1]
+
+            return steps
+
+        else:
+            self.log.error(f'No iterations available in this simulation.')
+            raise IndexError
+
+    def get_previous_iterations(self):
+
+        if len(self.iterations) > 1:
+
+            steps = {}
+
+            for engine in self.engines.values():
+                steps[engine.engine_name] = engine.iterations[len(engine.iterations) - 2]
+
+            return steps
+
+        else:
+            self.log.warning(f'Only one iteration available in this simulation. There is no previous iteration so far. '
+                           f'Current iteration returned instead.')
+            return self.get_current_iterations()
+
     def add_engine(self, engine_name):
         """"""
 
