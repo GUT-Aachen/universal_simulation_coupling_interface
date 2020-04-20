@@ -1,6 +1,5 @@
 import logging as log
 from pathlib import Path
-from utils.iterationStep import IterationsDict
 import shutil
 import time
 from engines.abaqus import AbaqusEngine
@@ -10,11 +9,19 @@ import copy
 
 
 class EnginesHandler:
-
+    """
+    The EngineHandler class is used to handle different types of engines, e.g. Abaqus or Pace3D. Each simulation
+    software has its specific features which are saved in the specific engine class like AbaqusEngine class. This
+    handler class combines the common parts of all the different simulation tools. On initiating the handler class a
+    specific engine is loaded into .engine. In this instance the different iteration steps for the specific engine
+    are stored in a list (.iterations). Further all paths and files used or needed by the engine are stored in
+    .paths/.files. Each instance has its own name, to identify the instance. For each engine used in the simulation
+    coupler only one instance of the EngineHandler class is needed.
+    """
     def __init__(self, engine):
         self.engine_name = engine
         self.engine = None
-        self.iterations = []  # IterationsDict()
+        self.iterations = []
         self.paths = {}
         self.files = {}
 
@@ -55,6 +62,16 @@ class EnginesHandler:
         return engine
 
     def add_iteration_step(self, iteration_name, previous_copy=False):
+        """ Add an iteration step to this instance of the engine handler.
+
+        Args:
+            iteration_name: name of the iteration to be added
+            previous_copy (boolean): set true to make a (deep)copy of the previous step, keeping grid information
+                                     and values
+
+        Returns:
+            IterationStep on success
+        """
 
         step_no = len(self.iterations)
         step_name_exists = False
@@ -85,7 +102,12 @@ class EnginesHandler:
                 self.log.debug(f'Added new iteration step: {iteration_name}')
                 return self.iterations[step_no]
 
-    def get_latest_iteration_step(self):
+    def get_curr_iteration_step(self):
+        """ Get the current iteration step.
+
+        Returns:
+            IterationStep
+        """
         return self.iterations[len(self.iterations) - 1]
 
     def path_cleanup(self, path_name, recreate_missing=True):
@@ -103,18 +125,22 @@ class EnginesHandler:
         """
         path = self.get_path(path_name)
 
+        # Check if path is file or folder
         if path.is_file():
             self.log.error(f'Given path is a file. Expected path.')
             raise TypeError
 
-        # Remove and recreate path
+        # Remove recursive and optionally recreate folder (see recreate_missing option)
         if path.is_dir():
-            shutil.rmtree(path)
-            time.sleep(0.5)
-            path.mkdir()
+            shutil.rmtree(path) # Remove all files and sub folders recursively
+            # time.sleep(0.5)
+            path.mkdir()  # Create dir
             self.log.info(f'Cleaned up path {path}')
+
         # FIXME Recreate only betroffene folder
         if recreate_missing:
+            print('TEST:', path.parent)
+            print('TEST:', path.parents)
             # Check if all paths in self.path are exist, otherwise create.
             for name, path in self.paths.items():
                 if not path.is_dir():
