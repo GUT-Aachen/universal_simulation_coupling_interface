@@ -77,10 +77,8 @@ log.info('Preparing first iterations')
 
 step_name = 'initial'
 
-actual_step = abaqus.iterations.add_iteration_step(step_name)
-abaqus.set_path(f'sub_folder_{step_name}', actual_step.create_step_folder(abaqus.get_path('output')))
-
-pace3d.iterations.add_iteration_step(step_name)
+actual_step = sim.add_iteration_step(step_name)
+actual_step['abaqus'].create_step_folder(abaqus.get_path('output'))
 
 # Load Abaqus nodes and coordinates from input file
 log.info(f'Read Abaqus node and coordinates for part {abaqus_part_name}')
@@ -89,10 +87,10 @@ abaqus.init_engine({'input_file': abaqus.get_path('input') / f'{sim.name}.inp'})
 pace3d.init_engine()
 # parts = abaqus.engine.get_part_names()
 # instances = abaqus.engine.get_instance_names()
-actual_step.grid.initiate_grid(abaqus.engine.get_nodes('Part-1'))
+actual_step['abaqus'].grid.initiate_grid(abaqus.engine.get_nodes('Part-1'))
 
 abaqus.engine.paths['scratch'] = abaqus.get_path('scratch')
-abaqus.engine.create_node_set_names('PP', actual_step.grid)
+abaqus.engine.create_node_set_names('PP', actual_step['abaqus'].grid)
 abaqus.engine.create_node_set_all_list('PP', 'Part-1')
 
 # Check if the initial pore pressure distribution is given as an data file. Otherwise the initial pore pressure
@@ -100,16 +98,16 @@ abaqus.engine.create_node_set_all_list('PP', 'Part-1')
 if pace3d.get_file('initial_pore_pressure'):
     log.debug(f'Setting initial pore pressure distribution by pace3d distribution data.')
     data = pace3d.engine.read_csv_file(pace3d.get_file('initial_pore_pressure'))
-    pace3d.iterations[step_name].grid.initiate_grid(data, 'pore_pressure')
+    actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
 
     transformer = GridTransformer()
-    transformer.add_grid(actual_step.grid, 'abaqus')
-    transformer.add_grid(pace3d.iterations['initial'].grid, 'pace3d')
+    transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
+    transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
 
     transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
 
-    abaqus.engine.create_boundary_condition('PP', actual_step.grid.get_node_values('pore_pressure'), 8)
+    abaqus.engine.create_boundary_condition('PP', actual_step['abaqus'].grid.get_node_values('pore_pressure'), 8)
 else:
     log.debug(f'Setting constant for initial pore pressure.')
     # TODO
@@ -119,12 +117,68 @@ else:
 # Write input- and bash-file
 # Current job name consists of abaqus_job_name and current step name
 name = f'{sim.name}_{step_name}'
-abaqus.set_file(f'input_file_{step_name}', abaqus.engine.write_input_file('PP', name, actual_step.get_path()))
+abaqus.set_file(f'input_file_{step_name}', abaqus.engine.write_input_file('PP', name, actual_step['abaqus'].get_path()))
 
-abaqus.set_file(f'bash_file_{step_name}', abaqus.engine.write_bash_file(actual_step.get_path(),
+abaqus.set_file(f'bash_file_{step_name}', abaqus.engine.write_bash_file(actual_step['abaqus'].get_path(),
                                                                         abaqus.get_file(f'input_file_{step_name}'),
                                                                         abaqus.get_file('subroutine'),
                                                                         True,
                                                                         'cpus=2'))
+
+# #################################################################################
+sim.call_subprocess(abaqus.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
+# #################################################################################
+# Postprocessing Abaqus simulation
+# Check if completed abaqus.check_iteration_successful()
+# Reading output, write into grid
+# #################################################################################
+# PACE 3D STUFF
+# Prepare Transfer
+# Transfer from grid to Pace3D
+# Start Simulation
+# Transfer from Pace3D to Grid
+# #################################################################################
+# Next Iteration
+for x in range(0, number_of_iterations):
+    # Preparing simulation iteration
+    step_name = f'step_{x+1}'
+
+    # Add a new step which is a copy of the previous step including all grids.
+    actual_step = sim.add_iteration_step(step_name, copy_previous=True)
+    actual_step['abaqus'].set_step_folder(abaqus.get_path('output'))
+    previous_step = sim.get_previous_iterations()
+
+    # Do some random stuff
+    data = pace3d.engine.read_csv_file(pace3d.get_file('pore_pressure'))
+    actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
+
+    transformer = GridTransformer()
+    transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
+    transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
+
+    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
+    transformer.transition('pace3d', 'pore_pressure', 'abaqus')
+
+    abaqus.engine.create_boundary_condition('PP', actual_step['abaqus'].grid.get_node_values('pore_pressure'), 8)
+
+    # Copy all files into the new directory to restart the previous analysis
+    # A restart job is only possible if the files of the previous simulation are in
+    # the same folder as the current simulation
+    abaqus.engine.copy_previous_result_files(previous_step['abaqus'].path, actual_step['abaqus'].path)
+
+    # Prepare input and batch file
+    name = f'{sim.name}_{step_name}'
+    abaqus.set_file(f'input_file_{step_name}',
+                    abaqus.engine.write_input_file('PP', name, actual_step['abaqus'].get_path()))
+
+    abaqus.set_file(f'bash_file_{step_name}', abaqus.engine.write_bash_file(actual_step['abaqus'].get_path(),
+                                                                            abaqus.get_file(f'input_file_{step_name}'),
+                                                                            abaqus.get_file('subroutine'),
+                                                                            True,
+                                                                            'cpus=2'))
+
+    sim.call_subprocess(abaqus.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
+
+    sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
+
 exit()
-sim.call_subprocess(abaqus.get_file(f'bash_file_{step_name}'), abaqus.get_path(f'subfolder_{step_name}'))
