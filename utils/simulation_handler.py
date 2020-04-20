@@ -145,7 +145,7 @@ class SimulationHandler:
                 self.log.info(f'Cleaned up output_path {path}')
             # FIXME Recreate only concerned folder
             if recreate_missing:
-                # Check if all paths in self.enginges are existing, otherwise create.
+                # Check if all paths in self.engines are existing, otherwise create.
                 for engine in self.engines.values():
                     for name, path in engine.paths.items():
                         if not path.is_dir():
@@ -160,7 +160,7 @@ class SimulationHandler:
             raise Exception
 
     def call_subprocess(self, file, cwd_folder):
-        self.log.info('Start subprocess')
+        self.log.info(f'Start subprocess in {file} executed in {cwd_folder}')
 
         file = Path(file)
         folder = Path(cwd_folder)
