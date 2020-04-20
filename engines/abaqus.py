@@ -4,6 +4,7 @@ from pathlib import Path
 from utils.grid import Grid
 import os
 import csv
+import shutil
 
 
 class AbaqusEngine:
@@ -215,9 +216,30 @@ class AbaqusEngine:
             self.log.error(str(err))
             return 0
 
-    def check_iteration_successful(self, path):
+    def check_iteration_successful(self, iteration_no):
         self.log.warning('Check if iteration successful (check_iteration_successful()) not developed yet. Always TRUE!')
         return True
+
+    def copy_previous_result_files(self, prev_job_folder, current_job_folder):
+        """"""
+        self.log.info(f'Copying files from previous iteration "{prev_job_folder}" to current iterations output '
+                      f'folder "{current_job_folder}".')
+        if not Path(current_job_folder).is_dir():
+            shutil.copytree(prev_job_folder, current_job_folder)
+        else:
+            self.log.error(f'{current_job_folder} allready exists')
+        return True
+
+    def clean_previous_files(self, step_name, current_job_folder):
+        # Remove files from previous simulation
+        # Current folder is looped and every file consisting of the previous job name will be deleted
+        self.log.info(f'Removing files of previous simulation ({step_name})from current subfolder: {current_job_folder}')
+        for dir_name, dir_names, file_names in os.walk(current_job_folder):
+            for filename in file_names:
+                if step_name in filename:
+                    Path(current_job_folder / filename).unlink()
+                    # os.remove(current_job_folder + '/' + filename)
+                    self.log.debug('File removed: %s', filename)
 
     def create_node_set_names(self, set_work_name, grid):
         """ Function to create a dictionary consisting of all node number and abaqus node set names. An entry of the
@@ -678,4 +700,5 @@ class AbaqusEngine:
         return 0
 
     def postprocessing(self):  # TODO
+        # check if sim completed
         return 0
