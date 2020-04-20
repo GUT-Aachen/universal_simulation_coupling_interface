@@ -47,6 +47,32 @@ class Grid:
 
         return str_output
 
+    def get_empty_nodes(self):
+        """ Getting a dictionary containing all nodes without values. This dict can be used to be filled with values
+        and set back to the grid using the method .set_node_values().
+
+        Returns:
+            dictionary including all nodes as keys with None as value
+        """
+        try:
+            node_number_dict = {}
+
+            for node_number in self.nodes.keys():
+                node_number_dict[node_number] = None
+
+            if len(node_number_dict):
+                return node_number_dict
+            else:
+                return False
+
+        except Exception as err:
+            log.error(f'An error occured while reading values: {err}')
+            return 0
+
+        except KeyError as err:
+            log.error(f'Key {value_name} not found. {err}')
+            return 0
+
     def get_coordinates_array(self):
         """
         Returns a tuple of coordinates
