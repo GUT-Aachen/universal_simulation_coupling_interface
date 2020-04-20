@@ -181,9 +181,10 @@ class Grid:
             self.log.error(f'An error occurred while renaming values: {err}')
             return False
 
-    def initiate_grid(self, data_set, value_name=None):
+    def initiate_grid(self, data_set, value_name=None, clear_first=True):
         """
         Initiate a new grid by transferring a dictionary including x/y/z-direction, values and optional node_number.
+        Existing grid nodes will be removed first.
 
         Args:
             data_set: dict including grid information
@@ -195,6 +196,10 @@ class Grid:
 
         try:
             if isinstance(data_set, list):
+
+                if clear_first and len(self.nodes) > 0:
+                    self.log.warning(f'Grid is not empty ({len(self.nodes)}). Grid will be vanished for initialization.')
+                    self.nodes = {}
 
                 i = -1
 
