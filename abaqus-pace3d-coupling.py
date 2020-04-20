@@ -1,11 +1,11 @@
-from utils.engines_handler import EnginesHandler
 import logging
 import sys
 from pathlib import Path
 import pprint
 from utils.grid_transformer import GridTransformer
+from utils.simulation_handler import SimulationHandler
 
-root_directory = Path('C:/Users/Sven F. Biebricher/Desktop/Abaqus-Pace3D-Transition.old')
+root_directory = Path('D:\Abaqus_Work_2019\Abaqus-Pace3D-Transition.old')
 
 # #################################################################################
 # Initialize the logger: logging class
@@ -28,14 +28,17 @@ logging.getLogger('').addHandler(consoleLogger)  # Add handler to root logger
 log = logging.getLogger('sample' + '.main')  # Define a logger for __main__ file
 # #################################################################################
 
-# Set Abaqus job name
-abaqus_job_name = 'CoupledSim_80'
+# Set simulation name
+simulation_name = 'CoupledSim_80'
 
-# Set engines
-abaqus = EnginesHandler('abaqus')
-pace3d = EnginesHandler('pace3d')
+# Initialize simulation handler
+sim = SimulationHandler(simulation_name)
+abaqus = sim.add_engine('abaqus')
+pace3d = sim.add_engine('pace3d')
 
-work_directory = root_directory
+# Initialize root path (input and output folder are set additionally)
+sim.set_root_path(root_directory)
+sim.output_path_cleanup()  # Clean up process for output folder
 
 # Name of Abaqus subroutine-file (f95) stored in ./input/
 abaqus_subroutine_file_name = 'subroutine_export.f'
@@ -44,50 +47,45 @@ pace3d_pore_pressure_file_name = 'pace3D_pore-pressure.dat'
 # Name of Pace3D pore pressure file (csv) stored in ./input/
 pace3d_pore_pressure_initial_file_name = 'pace3D_pore-pressure_initial.dat'
 
-pace3d.set_path('work', work_directory)
-pace3d.set_path('input', pace3d.get_path('work') / 'input')
+# Set Pace3D paths and files
+pace3d.set_path('input', sim.get_input_path())
+pace3d.set_path('output', sim.get_output_path() / 'pace3d')
 pace3d.set_file('pore_pressure', pace3d.get_path('input') / pace3d_pore_pressure_file_name)
 pace3d.set_file('initial_pore_pressure', pace3d.get_path('input') / pace3d_pore_pressure_initial_file_name)
 
-# Handling input files and paths
-abaqus.set_path('work', work_directory)
-abaqus.set_path('input', abaqus.get_path('work') / 'input')
-abaqus.set_path('output', abaqus.get_path('work') / 'output')
+# Set Abaqus paths and files
+abaqus.set_path('input', sim.get_input_path())
+abaqus.set_path('output', sim.get_output_path() / 'abaqus')
 abaqus.set_path('scratch', abaqus.get_path('output') / 'scratch')
-
+abaqus.set_path('scratch', abaqus.get_path('output') / 'scratch')
 abaqus.set_file('subroutine', abaqus.get_path('input') / abaqus_subroutine_file_name)
 
 number_of_iterations = 1
 abaqus_part_name = 'Part-1'
 
 # Log environmental variables
-log.debug(f'abaqus_work_path: {abaqus.get_path("work")}')
-log.debug(f'abaqus_job_name: {abaqus_job_name}')
+log.debug(f'root_directory: {sim.get_root_path()}')
+log.debug(f'simulation_handler_name: {sim.name}')
 log.debug(f'abaqus_subroutine_file_name: {abaqus.get_file("subroutine")}')
 log.debug(f'pace3d_pore_pressure_file_name: {pace3d.get_file("pore_pressure")}')
 log.debug(f'pace3d_pore_pressure_initial_file_name: {pace3d.get_file("initial_pore_pressure")}')
 log.info(f'number_of_iterations: {number_of_iterations}')
 
 # #################################################################################
-# Cleaning up and preparing for first iteration of simulation
-# Clean up process for folder
-abaqus.path_cleanup('output')
 # Preparing first iteration (geostatic)
 log.info('Preparing first iterations')
 
 step_name = 'initial'
 
 actual_step = abaqus.iterations.add_iteration_step(step_name)
-abaqus.set_path(f'subfolder_{step_name}', actual_step.create_step_folder(abaqus.get_path('output')))
+abaqus.set_path(f'sub_folder_{step_name}', actual_step.create_step_folder(abaqus.get_path('output')))
 
 pace3d.iterations.add_iteration_step(step_name)
-
-# log.info(f'Start Iteration No. {iteration_cnt}')
 
 # Load Abaqus nodes and coordinates from input file
 log.info(f'Read Abaqus node and coordinates for part {abaqus_part_name}')
 
-abaqus.init_engine({'input_file': abaqus.get_path('input') / f'{abaqus_job_name}.inp'})
+abaqus.init_engine({'input_file': abaqus.get_path('input') / f'{sim.name}.inp'})
 pace3d.init_engine()
 # parts = abaqus.engine.get_part_names()
 # instances = abaqus.engine.get_instance_names()
@@ -120,7 +118,7 @@ else:
 
 # Write input- and bash-file
 # Current job name consists of abaqus_job_name and current step name
-name = f'{abaqus_job_name}_{step_name}'
+name = f'{sim.name}_{step_name}'
 abaqus.set_file(f'input_file_{step_name}', abaqus.engine.write_input_file('PP', name, actual_step.get_path()))
 
 abaqus.set_file(f'bash_file_{step_name}', abaqus.engine.write_bash_file(actual_step.get_path(),
@@ -128,10 +126,5 @@ abaqus.set_file(f'bash_file_{step_name}', abaqus.engine.write_bash_file(actual_s
                                                                         abaqus.get_file('subroutine'),
                                                                         True,
                                                                         'cpus=2'))
-
-abaqus.call_subprocess(str(abaqus.get_file(f'bash_file_{step_name}')), str(abaqus.get_path(f'subfolder_{step_name}')))
 exit()
-# #################################################################################
-
-subprocess.call(current_bash_file_win, shell=True, cwd=current_job_folder)  # Start simulation in shell
-log.info('End Simulia Abaqus simulation')
+sim.call_subprocess(abaqus.get_file(f'bash_file_{step_name}'), abaqus.get_path(f'subfolder_{step_name}'))
