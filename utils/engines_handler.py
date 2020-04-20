@@ -5,7 +5,6 @@ import shutil
 import time
 from engines.abaqus import AbaqusEngine
 from engines.pace3d import Pace3dEngine
-import subprocess
 
 
 class EnginesHandler:
