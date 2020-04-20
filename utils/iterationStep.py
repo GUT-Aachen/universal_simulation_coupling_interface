@@ -54,7 +54,7 @@ class IterationStep:
         return self.computing_time
 
     def __str__(self):
-        return f'name={self.name} grid-size={len(self.grid)} '
+        return f'name={self.name}; no={self.step_no}; grid-size={len(self.grid)} '
 
     __repr__ = __str__
 
@@ -65,6 +65,28 @@ class IterationStep:
     @computing_time.setter
     def computing_time(self, value):
         self._computing_time = value
+
+    def set_step_folder(self, parent_folder):
+        """
+        Set sub folder where additional files for this step are stored.
+
+        Args:
+            parent_folder (str, Path): Path or string of path of the parent folder
+
+        Returns:
+            boolean: true on success
+        """
+        parent_folder = Path(parent_folder)
+
+        sub_folder = f'step_{self.name}'
+
+        path = parent_folder / sub_folder
+
+        self.path = path
+
+        if not path.is_dir():
+            self.log.warning(f'Subfolder does not exist. {path}')
+            return path
 
     def create_step_folder(self, parent_folder):
         """
@@ -89,4 +111,3 @@ class IterationStep:
         if not path.is_dir():
             self.log.error(f'Subfolder does not exist and can not be created. {path}')
             raise FileNotFoundError
-
