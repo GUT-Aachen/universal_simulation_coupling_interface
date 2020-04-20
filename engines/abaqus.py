@@ -215,6 +215,10 @@ class AbaqusEngine:
             self.log.error(str(err))
             return 0
 
+    def check_iteration_successful(self, path):
+        self.log.warning('Check if iteration successful (check_iteration_successful()) not developed yet. Always TRUE!')
+        return True
+
     def create_node_set_names(self, set_work_name, grid):
         """ Function to create a dictionary consisting of all node number and abaqus node set names. An entry of the
                 the dictionary looks for example like this: (234: node-234).
