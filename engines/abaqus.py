@@ -8,9 +8,10 @@ import shutil
 
 
 class AbaqusEngine:
-    """
-    This is a class to handle a Simulia Abaqus input file. It is possible to extract information from the input file
-    and to modify/create a new input file.
+    """ Specific class to handle Simulia Abaqus simulation software. This class is able to handle reading and writing
+    input files as well as modifing it. This class is also used to read and write ascii files produced by the software.
+    The simulation is controlled by a batch file, which can be created in respect to different parameters like the
+    used operation system (linux/windows), the numbers of cpus or if a user subroutine should be used..
     """
 
     def __init__(self, input_file):
@@ -50,18 +51,17 @@ class AbaqusEngine:
         return self.input_file.name
 
     def get_part_names(self):
-        """
-        Searches the input file for all parts.
+        """ Searches the input file for all parts.
 
-        Returns: List of parts
+        Returns:
+            List of parts
         """
 
         parts = [line[12:] for line in self.data if '*Part, name=' in line]
         return parts
 
     def get_instance_names(self):
-        """
-        Searches the input file for all instances assembled from parts. A dictionary containing the instance name
+        """ Searches the input file for all instances assembled from parts. A dictionary containing the instance name
         and the corresponding part name will be returned.
 
         Returns: Dictionary of all instances like {instance-name : part-name}
@@ -217,11 +217,23 @@ class AbaqusEngine:
             return 0
 
     def check_iteration_successful(self, iteration_no):
+        # TODO
         self.log.warning('Check if iteration successful (check_iteration_successful()) not developed yet. Always TRUE!')
         return True
 
     def copy_previous_result_files(self, prev_job_folder, current_job_folder):
-        """"""
+        """ To ensure a better overview the results of each iteration shall be stored in its own directory. But to
+        resume a previous iteration (simulation) step Abaqus needs most of the previously calculated/produced files.
+        Therefore all files a the previous iteration step are going to be copied into the current iteration folder.
+        After ending the iteration step successfully the files are removed again by function .clean_previous_files().
+
+        Args:
+            prev_job_folder: path to the previous iteration step results
+            current_job_folder: path to the current iteratin step output
+
+        Returns:
+            boolean: True on success
+        """
         self.log.info(f'Copying files from previous iteration "{prev_job_folder}" to current iterations output '
                       f'folder "{current_job_folder}".')
         if not Path(current_job_folder).is_dir():
@@ -231,6 +243,16 @@ class AbaqusEngine:
         return True
 
     def clean_previous_files(self, step_name, current_job_folder):
+        """ After a successfull iteration step, which is not the initial step, the files of the previous simulation are
+        deleted from the current simulation. See .copy_previous_results_files().
+
+        Args:
+            step_name: name of the previous step to identify the previous files
+            current_job_folder: path to the current iteration step output folder
+
+        Returns:
+            boolean: True on success
+        """
         # Remove files from previous simulation
         # Current folder is looped and every file consisting of the previous job name will be deleted
         self.log.info(f'Removing files of previous simulation ({step_name})from current subfolder: {current_job_folder}')
@@ -240,6 +262,8 @@ class AbaqusEngine:
                     Path(current_job_folder / filename).unlink()
                     # os.remove(current_job_folder + '/' + filename)
                     self.log.debug('File removed: %s', filename)
+
+        return True
 
     def create_node_set_names(self, set_work_name, grid):
         """ Function to create a dictionary consisting of all node number and abaqus node set names. An entry of the
@@ -395,9 +419,8 @@ class AbaqusEngine:
 
     def write_input_file_restart(self, set_work_name: str, job_name: str, previous_input_file: str, step_name: str,
                                  restart_step: str, resume: bool = True):
-        """
-        This function modifies the previous input file and saves it in instances output folder with the name
-         'job_name'.inp. This new file is a Abaqus restart input file.
+        """ This function modifies the previous input file and saves it in instances output folder with the name
+        'job_name'.inp. This new file is a Abaqus restart input file.
 
         Args:
             set_work_name: Name to load/save the set in instance
@@ -511,8 +534,7 @@ class AbaqusEngine:
             return 0
 
     def set_path(self, path_name, path):
-        """
-        Set paths, for example scratch or output path.
+        """ Set paths, for example scratch or output path.
 
         Args:
             path_name: name of the path in instance
@@ -695,10 +717,3 @@ class AbaqusEngine:
         except Exception as err:
             self.log.error(f'Writing data in  --{file}-- not successful. [{err}]')
             return False
-
-    def preprocessing(self):  # TODO
-        return 0
-
-    def postprocessing(self):  # TODO
-        # check if sim completed
-        return 0
