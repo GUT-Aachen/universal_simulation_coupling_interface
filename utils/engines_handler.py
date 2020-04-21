@@ -268,4 +268,4 @@ class EnginesHandler:
 
         except KeyError as err:
             self.log.error(f'Error occured while reading file {file_name}. {err}')
-            return False
+            raise KeyError
