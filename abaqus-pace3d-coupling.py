@@ -59,7 +59,7 @@ abaqus.set_path('scratch', abaqus.get_path('output') / 'scratch')
 abaqus.set_path('scratch', abaqus.get_path('output') / 'scratch')
 abaqus.set_file('subroutine', abaqus.get_path('input') / abaqus_subroutine_file_name)
 
-number_of_iterations = 3
+number_of_iterations = 1
 abaqus_part_name = 'Part-1'
 
 # Log environmental variables
@@ -98,7 +98,7 @@ if pace3d.get_file('initial_pore_pressure'):
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
 
-    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
+    transformer.find_nearest_neighbors('pace3d', 'abaqus', 4)
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
 
     abaqus.engine.create_boundary_condition('PP', actual_step['abaqus'].grid.get_node_values('pore_pressure'), 8)
@@ -150,8 +150,10 @@ for x in range(0, number_of_iterations):
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
 
-    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
+    transformer.find_nearest_neighbors('pace3d', 'abaqus', 4)
+    transformer.find_nearest_neighbors('abaqus', 'pace3d', 4)
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
+    transformer.transformation_validation('pace3d', 'pore_pressure', 'abaqus')
 
     abaqus.engine.create_boundary_condition('PP', actual_step['abaqus'].grid.get_node_values('pore_pressure'), 8)
 
