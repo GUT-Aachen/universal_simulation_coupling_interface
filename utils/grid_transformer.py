@@ -150,24 +150,25 @@ class GridTransformer:
         # Check if grids exist
         if src_grid_name not in self.grids:
             self.log.error(f'Grid with name "{src_grid_name}" not found in {self.grids.keys()}')
-            return False
+            raise KeyError
         if target_grid_name not in self.grids:
             self.log.error(f'Grid with name "{target_grid_name}" not found in {self.grids.keys()}')
-            return False
+            raise KeyError
 
         # Check if value exists in src_grid
         src_grid = self.grids[src_grid_name]
         target_grid = self.grids[target_grid_name]
         if not src_grid['grid'].get_node_values(value_name):
             self.log.error(f'Value_name ({value_name}) not found in nodes.')
-            return False
+            raise KeyError
 
         src_values = src_grid['grid'].get_node_values(value_name)
 
         # Check if neighbors for this combination have been set
         if src_grid_name not in target_grid['transform']:
-            self.log.error('No transformation matrix has been found. Before transformation neighbors have to be found.')
-            return False
+            self.log.error(f'No transformation matrix has been found for {src_grid_name} to {target_grid_name}. '
+                           f'Before transformation neighbors have to be found.')
+            raise KeyError
 
         for node, node_dict in target_grid['transform'][src_grid_name].items():
             sum_distance = 0
@@ -178,10 +179,10 @@ class GridTransformer:
                 distance = item['distance']
                 node_number = item['node_number']
 
-                sum_distance += distance
+                sum_distance += 1 / distance
                 value = src_values[node_number]
 
-                factor += value * distance
+                factor += value * 1 / distance
 
             result = factor / sum_distance
             target_grid['grid'].nodes[node].set_value(value_name, result)
@@ -290,7 +291,8 @@ class GridTransformer:
             ax2 = mpl_fig.add_subplot(222)
             cb2 = ax2.scatter(list(target_grid.get_node_values('x_coordinate').values()),
                               list(target_grid.get_node_values('y_coordinate').values()),
-                              s=1, c=list(target_grid.get_node_values('data').values()), cmap=plt.cm.get_cmap('RdBu'))
+                              s=1, c=list(target_grid.get_node_values(value_name).values()),
+                              cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb2, ax=ax2)
             ax2.set_title('output')
 
