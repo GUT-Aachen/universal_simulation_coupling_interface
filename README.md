@@ -1,4 +1,46 @@
-# NodeData Transition Abaqus <> Pace3D
+# Universal Simulation Coupling Interface
+
+> Some information about the interface
+
+![License: GNU](https://img.shields.io/github/license/froido/simulation_coupling_interface?style=flat-square)
+![License: GNU](https://img.shields.io/github/release-date/froido/simulation_coupling_interface?style=flat-square)
+![License: GNU](https://img.shields.io/github/v/release/froido/simulation_coupling_interface?style=flat-square)
+
+---
+
+## Features
+
+---
+
+## Requirements
+
+---
+
+## Setup
+
+---
+
+## Usage
+
+---
+
+## Support
+
+---
+
+## License
+
+![License: GNU](https://img.shields.io/github/license/froido/simulation_coupling_interface?style=flat-square)
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
+
+---
+
+## Thanks
+---
+---
+---
+
+## NodeData Transition Abaqus <> Pace3D
 This python 2.7 compatible function toolbox can be used to perform a data transition from a mesh in [Simulia Abaqus](https://www.3ds.com/de/produkte-und-services/simulia/produkte/abaqus/) to a grid in [Pace3D](https://www.hs-karlsruhe.de/idm/pace3d-software/).
 
 Two data sets are needed:
