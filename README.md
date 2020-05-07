@@ -5,7 +5,10 @@
 ![License: GNU](https://img.shields.io/github/v/release/froido/simulation_coupling_interface?style=flat-square)
 ![DOI](https://img.shields.io/static/v1?label=DOI&message=DOIDOIDOI&color=blue&style=flat-square)
 
-> This framework can be used to partially couple two or more simulations. This interface manages the workflow of the simulation coupling, as it exchanges data between grids or meshes at each iteration and modifies the data to fit manufacturer specifications. At the moment only two engines (Simulia Abaqus and Pace3D) are included, but thanks to a modular programming new engines can be easily added. The communication between the `USCI (Universal Simulation Coupling Interface)` and the engine is established via CLI (command line interface). The data exchange between the interface and the engine is currently handled via ASCII files, but differs depending on the engine.
+> This framework can be used to partially couple two or more simulations. 
+  This interface manages the workflow of the simulation coupling, as it exchanges data between grids or meshes at each iteration and modifies the data to fit manufacturer specifications. 
+  At the moment only two engines (Simulia Abaqus and Pace3D) are included, but thanks to a modular programming new engines can be easily added. The communication between the `USCI (Universal Simulation Coupling Interface)` and the engine is established via CLI (command line interface).
+  The data exchange between the interface and the engine is currently handled via ASCII files, but differs depending on the engine.
 
 ---
 
