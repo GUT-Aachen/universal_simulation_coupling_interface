@@ -319,16 +319,25 @@ class AbaqusEngine:
                 bc_dict
             """
 
+        # Check input parameters
+        if not isinstance(set_work_name, str) or not isinstance(node_values_dict, dict) or not isinstance(bc_1_name, int) or not isinstance(bc_2_name, int):
+            self.log.error(f'Input parameters do not fit the needed type:'
+                           f'"set_work_name" should be str is {type(set_work_name).__name__}; '
+                           f'"node_values_dict" should be dict is {type(node_values_dict).__name__}; '
+                           f'"bc_1_name" should be int is {type(bc_1_name).__name__}; '
+                           f'"bc_2_name" should be int is {type(bc_2_name).__name__};')
+            raise TypeError
+
         # Check if the set_work_name exists in instance
         if set_work_name in self.node_set:
             if 'set_names' in self.node_set[set_work_name]:
                 node_set_names_dict = self.node_set[set_work_name]['set_names']
             else:
                 self.log.error(f'"set_names" not found in {self.node_set[set_work_name].keys()}')
-                return 0
+                raise KeyError
         else:
             self.log.error(f'Set_work_name {set_work_name} not found in {self.node_set.keys()}')
-            return 0
+            raise KeyError
 
         # If only one boundary condition is given, the second must fit the first one, according to Abaqus manual
         if bc_2_name == 0:
@@ -340,7 +349,7 @@ class AbaqusEngine:
         for node_number in node_values_dict:
             if node_number not in node_set_names_dict.keys():
                 self.log.error(f'Node {node_number} not found in node sets in .node_set[{set_work_name}][set_names]')
-                return 0
+                raise KeyError
 
         try:
             # Every node gets its own boundary condition as shown below:
@@ -358,7 +367,7 @@ class AbaqusEngine:
 
         except Exception as err:
             self.log.error(str(err))
-            return 0
+            raise Exception
 
     def write_input_file(self, set_work_name: str, job_name: str, path):
         """
