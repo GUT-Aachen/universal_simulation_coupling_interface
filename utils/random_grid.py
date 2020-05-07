@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt  # used for visualisation of transformation vali
 class GaussRandomizeGrid:
 
     def __init__(self):
+
         self.log = log.getLogger(self.__class__.__name__)
 
     def random_numbers_range(self, min_val, max_val, sigma_percentage=0.05):
@@ -38,14 +39,14 @@ class GaussRandomizeGrid:
             self.log.error(f'An error occured {err}')
             raise Exception
 
-    def get_random_dataset(self, input_data, maximum, plot: bool = False):
-        """ Creates a ndarray of the size of the original dataset filled with random numbers. Random numbers
-            boundaries are defined by the min/max-values of the given dataset influenced by the given offset.
+    def get_random_data_set(self, input_data, maximum, plot: bool = False):
+        """ Creates a ndarray of the size of the original data set filled with random numbers. Random numbers
+            boundaries are defined by the min/max-values of the given data set influenced by the given offset.
 
         Parameters:
             input_data (list, dict): input data as type(list or dict) containing the data that shall analysed
-            maximum (dbl): sets the maximum deviation in percentage to the given dataset.
-            plot (bool): if true a histogram of the given dataset and the output will be plotted
+            maximum (dbl): sets the maximum deviation in percentage to the given data set.
+            plot (bool): if true a histogram of the given data set and the output will be plotted
 
         Returns:
             ndarray
@@ -55,11 +56,11 @@ class GaussRandomizeGrid:
             self.log.debug('Analysing statistics')
 
             if isinstance(input_data, dict):
-                dataset = list(input_data.values())
+                data_set = list(input_data.values())
                 keys = list(input_data.keys())
             elif isinstance(input_data, list):
                 if len(input_data[0] == 1):
-                    dataset = input_data
+                    data_set = input_data
                 else:
                     self.log.error('Input_data is list with more than one dimension.')
                     raise TypeError
@@ -67,12 +68,12 @@ class GaussRandomizeGrid:
                 self.log.error('Input_data has to be of type dict or list(1-dimensional)')
                 raise TypeError
 
-            # Statistics of given dataset
-            min_val = min(dataset)
-            max_val = max(dataset)
-            mean_val = statistics.mean(dataset)
-            stdev_val = statistics.stdev(dataset)
-            coeff_of_var_val = stdev_val/mean_val  # Will be used as input for the range of random numbers
+            # Statistics of given data set
+            min_val = min(data_set)
+            max_val = max(data_set)
+            mean_val = statistics.mean(data_set)
+            stdev_val = statistics.stdev(data_set)
+            coeff_of_var_val = stdev_val/mean_val+0.01  # Will be used as input for the range of random numbers
 
             self.log.debug(f'Statistics of input:')
             self.log.debug(f'Minimum: {min_val}')
@@ -90,7 +91,7 @@ class GaussRandomizeGrid:
                 min_val_off, max_val_off = max_val_off, min_val_off
 
             # Creating an empty ndarray of the same size as given input dataset
-            rand_array = numpy.empty_like(dataset)
+            rand_array = numpy.empty_like(data_set).astype(float)
 
             # Filling the random array with random numbers
             with numpy.nditer(rand_array, op_flags=['readwrite']) as it:
@@ -98,7 +99,7 @@ class GaussRandomizeGrid:
                     random_no = self.random_numbers_range(min_val_off, max_val_off, coeff_of_var_val)
                     x[...] = random_no
 
-            rand_array = numpy.multiply(rand_array, dataset)
+            rand_array = numpy.multiply(rand_array, data_set)
 
             # Statistics of given dataset
             min_val_rand = min(rand_array)
@@ -119,7 +120,7 @@ class GaussRandomizeGrid:
             if plot:
                 fig = plt.figure()
                 sub1 = fig.add_subplot(121)
-                sub1.hist(dataset, bins='auto', range=(min_val, max_val))
+                sub1.hist(data_set, bins='auto', range=(min_val, max_val))
                 sub1.set_title('Histogram input dataset')
 
                 sub2 = fig.add_subplot(122)
