@@ -70,7 +70,7 @@ class IterationStep:
     def set_prefix(self, prefix: str):
         self.prefix = prefix
 
-    def get_prefix(self, prefix: str):
+    def get_prefix(self):
         return self.prefix
 
     def set_step_folder(self, parent_folder):
