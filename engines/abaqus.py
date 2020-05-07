@@ -531,7 +531,7 @@ class AbaqusEngine:
 
         except Exception as err:
             self.log.error(str(err))
-            return 0
+            raise err
 
     def set_path(self, path_name, path):
         """ Set paths, for example scratch or output path.
@@ -601,22 +601,22 @@ class AbaqusEngine:
                 bash_file = path / f'{job_name}.bat'
 
                 # Create the command line for the bash file according to given function input parameters.
-                cmd_string = f'call abaqus job={job_name} input={input_file}'
+                cmd_string = f'call abaqus job="{job_name}" input="{input_file}"'
 
                 # Check if oldjob parameter is given and add parameter to command line
                 if old_job_name:
-                    cmd_string = f'{cmd_string} oldjob={old_job_name}'
+                    cmd_string = f'{cmd_string} oldjob="{old_job_name}"'
 
                 # Add user subroutine to command line
                 if user_subroutine_path:
-                    cmd_string = f'{cmd_string} user={user_subroutine_path}'
+                    cmd_string = f'{cmd_string} user="{user_subroutine_path}"'
 
                 # Check if scratch parameter is given and add parameter to command line
                 if use_scratch_path:
                     if not self.paths['scratch'].is_dir():
                         self.log.error(f'Scratch path must be assigned first via function .set_path("scratch", str)')
                         return False
-                    cmd_string = f'{cmd_string} scratch={self.paths["scratch"]}'
+                    cmd_string = f'{cmd_string} scratch="{self.paths["scratch"]}"'
 
                 # Add additional parameters to command line
                 if additional_parameters:
@@ -634,7 +634,8 @@ class AbaqusEngine:
 
             except Exception as err:
                 self.log.error(str(err))
-                return False
+                raise err
+
         elif os.name == 'posix':
             self.log.error('Batch file builder for Unix not implemented yet.')
         else:
