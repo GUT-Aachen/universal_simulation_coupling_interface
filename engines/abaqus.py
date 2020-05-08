@@ -430,14 +430,15 @@ class AbaqusEngine:
             self.log.error(str(err))
             return 0
 
-    def write_input_file_restart(self, set_work_name: str, job_name: str, previous_input_file: str, step_name: str,
+    def write_input_file_restart(self, set_work_name: str, job_name: str, path, previous_input_file: str, step_name: str,
                                  restart_step: str, resume: bool = True):
         """ This function modifies the previous input file and saves it in instances output folder with the name
         'job_name'.inp. This new file is a Abaqus restart input file.
 
         Args:
-            set_work_name: Name to load/save the set in instance
-            job_name: Name of the Abaqus job
+            set_work_name (str): Name to load/save the set in instance
+            job_name (str): Name of the Abaqus job
+            path (Path):  Where to save input-file
             previous_input_file: Path of the previous Abaqus input file
             step_name: name of the step
             restart_step: step from where to restart
@@ -467,7 +468,7 @@ class AbaqusEngine:
             # Read input file and save in an array
             previous_input_file_data = previous_input_file.read_text().split('\n')
 
-            input_file = self.paths['output'] / f'{job_name}.inp'
+            input_file = path / f'{job_name}.inp'
 
             input_file_text = []
 
