@@ -51,6 +51,9 @@ abaqus_handler = sim.add_engine('abaqus')
 
 # Tell the Abaqus engine where paths and files to be found. The scratch folder is used by Abaqus to store temporarily
 # needed files on the disk.
+# Input: Contains all files that are needed to run the simulation
+# Output: Is the root folder for the output. In here all generated files will be stored.
+# Scratch: Abaqus can use a scratch folder so store temporary files
 abaqus_handler.set_path('input', sim.get_input_path())
 abaqus_handler.set_path('output', sim.get_output_path() / 'abaqus')
 abaqus_handler.set_path('scratch', abaqus_handler.get_path('output') / 'scratch')
@@ -126,7 +129,7 @@ actual_step['abaqus'].grid.set_node_values('pore_pressure', nodes_dict)
 abaqus_handler.engine.create_boundary_condition('PP', actual_step['abaqus'].grid.get_node_values('pore_pressure'), 8)
 
 # Write Abaqus input- and Microsoft Windows bash-file
-# Current job name consists of abaqus_job_name and current step name
+# Prefix for output files consists of simulation name and current step name
 actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
 abaqus_handler.set_file(f'input_file_{step_name}',
                         abaqus_handler.engine.write_input_file('PP',
@@ -158,18 +161,21 @@ for x in range(0, number_of_steps):
 
     # Add a new step which is a copy of the previous step including all grids.
     actual_step = sim.add_iteration_step(step_name, copy_previous=True)
-    actual_step['abaqus'].grid.get_node_values('pore_pressure')
     actual_step['abaqus'].set_step_folder(abaqus_handler.get_path('output'))
     previous_step = sim.get_previous_iterations()
 
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
     node_value_dict = previous_step['abaqus'].grid.get_node_values('pore_pressure')
-    randomizer = GaussRandomizeGrid()
-    abaqus_rand_data = randomizer.get_random_data_set(node_value_dict, -0.05, False)
-    actual_step['abaqus'].grid.set_node_values('pore_pressure', abaqus_rand_data)
 
-    # Create modified boundary conditions in Abaqus input file
+    randomize = GaussRandomizeGrid()  # Initialize GaussRandomizeGrid class
+    abaqus_rand_data = randomize.get_random_data_set(
+        node_value_dict,  # Input dictionary (or list)
+        -0.05,  # Largest possible change in the values
+        False)  # No visualization will be shown
+    actual_step['abaqus'].grid.set_node_values('pore_pressure', abaqus_rand_data)  # Store random data in grid
+
+    # Create modified boundary conditions in Abaqus input file. This must be done according to Abaqus manual
     abaqus_handler.engine.create_boundary_condition('PP',
                                                     actual_step['abaqus'].grid.get_node_values('pore_pressure'),
                                                     8)
@@ -198,4 +204,6 @@ for x in range(0, number_of_steps):
 
     # After subprocess ended all files from previous simulation can be deleted. Only files of the actual step remain
     # in the actual step output folder.
-    sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
+    sim.engines['abaqus'].engine.clean_previous_files(
+        previous_step['abaqus'].name,  # Name of previous step
+        actual_step['abaqus'].path)  # Path to the actual output folder
