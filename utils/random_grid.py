@@ -75,7 +75,11 @@ class GaussRandomizeGrid:
             max_val = max(data_set)
             mean_val = statistics.mean(data_set)
             stddev_val = statistics.stdev(data_set)
-            coeff_of_var_val = stddev_val / mean_val + 0.01  # Will be used as input for the range of random numbers
+            # coeff_of_var_val will be used as input for the range of random numbers. To create correct random numbers a
+            # value unlike zero is mandatory
+            coeff_of_var_val = stddev_val / mean_val
+            if coeff_of_var_val == 0:
+                coeff_of_var_val += 0.01
 
             self.log.debug(f'Statistics of input:')
             self.log.debug(f'Minimum: {min_val}')
@@ -86,13 +90,14 @@ class GaussRandomizeGrid:
 
             # Influencing the statistics of the given data set depending on the given maximum percentage of deviation
             min_val_off = 1
-            max_val_off = 1+maximum
+            max_val_off = 1 + maximum
 
             # Swap numbers if min is bigger then max
             if min_val_off > max_val_off:
                 min_val_off, max_val_off = max_val_off, min_val_off
 
-            # Creating an empty ndarray of the same size as given input data set
+            # Creating an empty ndarray of the same size and type as given input data set. Float type is mandatory as
+            # self.random_numbers_range (input in ndarray) is always between 0 and 1.
             rand_array = numpy.empty_like(data_set).astype(float)
 
             # Filling the random array with random numbers
