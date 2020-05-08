@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt  # used for visualisation of transformation vali
 
 
 class GaussRandomizeGrid:
+    """ GaussRandomizeGrid is used to randomize the content of a dictionary or a list. """
 
     def __init__(self):
 
@@ -36,7 +37,7 @@ class GaussRandomizeGrid:
             return random_number
 
         except Exception as err:
-            self.log.error(f'An error occured {err}')
+            self.log.error(f'An error occurred {err}')
             raise Exception
 
     def get_random_data_set(self, input_data, maximum, plot: bool = False):
@@ -54,6 +55,7 @@ class GaussRandomizeGrid:
 
         try:
             self.log.debug('Analysing statistics')
+            keys = []
 
             if isinstance(input_data, dict):
                 data_set = list(input_data.values())
@@ -72,17 +74,17 @@ class GaussRandomizeGrid:
             min_val = min(data_set)
             max_val = max(data_set)
             mean_val = statistics.mean(data_set)
-            stdev_val = statistics.stdev(data_set)
-            coeff_of_var_val = stdev_val/mean_val+0.01  # Will be used as input for the range of random numbers
+            stddev_val = statistics.stdev(data_set)
+            coeff_of_var_val = stddev_val / mean_val + 0.01  # Will be used as input for the range of random numbers
 
             self.log.debug(f'Statistics of input:')
             self.log.debug(f'Minimum: {min_val}')
             self.log.debug(f'Maximum: {max_val}')
             self.log.debug(f'Mean: {mean_val}')
-            self.log.debug(f'Standard deviation: {stdev_val}')
+            self.log.debug(f'Standard deviation: {stddev_val}')
             self.log.debug(f'Coefficient of variation: {coeff_of_var_val}')
 
-            # Influencing the statistics of the given dataset depending on the given maximum percentage of deviation
+            # Influencing the statistics of the given data set depending on the given maximum percentage of deviation
             min_val_off = 1
             max_val_off = 1+maximum
 
@@ -90,7 +92,7 @@ class GaussRandomizeGrid:
             if min_val_off > max_val_off:
                 min_val_off, max_val_off = max_val_off, min_val_off
 
-            # Creating an empty ndarray of the same size as given input dataset
+            # Creating an empty ndarray of the same size as given input data set
             rand_array = numpy.empty_like(data_set).astype(float)
 
             # Filling the random array with random numbers
@@ -101,19 +103,19 @@ class GaussRandomizeGrid:
 
             rand_array = numpy.multiply(rand_array, data_set)
 
-            # Statistics of given dataset
+            # Statistics of given data set
             min_val_rand = min(rand_array)
             max_val_rand = max(rand_array)
             mean_val_rand = statistics.mean(rand_array)
-            stdev_val_rand = statistics.stdev(rand_array)
+            stddev_val_rand = statistics.stdev(rand_array)
             # coeff_of_var_val_rand will be used as input for the range of random numbers
-            coeff_of_var_val_rand = stdev_val_rand/mean_val_rand
+            coeff_of_var_val_rand = stddev_val_rand/mean_val_rand
 
             self.log.debug('Statistics of output:')
             self.log.debug(f'Minimum: {min_val_rand}')
             self.log.debug(f'Maximum: {max_val_rand}')
             self.log.debug(f'Mean: {mean_val_rand}')
-            self.log.debug(f'Standard deviation: {stdev_val_rand}')
+            self.log.debug(f'Standard deviation: {stddev_val_rand}')
             self.log.debug(f'Coefficient of variation: {coeff_of_var_val_rand}')
 
             # printing output for debugging purposes
@@ -121,7 +123,7 @@ class GaussRandomizeGrid:
                 fig = plt.figure()
                 sub1 = fig.add_subplot(121)
                 sub1.hist(data_set, bins='auto', range=(min_val, max_val))
-                sub1.set_title('Histogram input dataset')
+                sub1.set_title('Histogram input data set')
 
                 sub2 = fig.add_subplot(122)
                 sub2.hist(rand_array, bins='auto', range=(min_val_rand, max_val_rand))
@@ -149,5 +151,5 @@ class GaussRandomizeGrid:
             return output_data
 
         except Exception as err:
-            self.log.error(f'An error occured {err}')
+            self.log.error(f'An error occurred {err}')
             raise Exception
