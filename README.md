@@ -1,8 +1,8 @@
 # Universal Simulation Coupling Interface
 
-![License: GNU](https://img.shields.io/github/license/froido/simulation_coupling_interface?style=flat-square)
-![License: GNU](https://img.shields.io/github/release-date/froido/simulation_coupling_interface?style=flat-square)
-![License: GNU](https://img.shields.io/github/v/release/froido/simulation_coupling_interface?style=flat-square)
+![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)
+![License: GNU](https://img.shields.io/github/release-date/froido/universal_simulation_coupling_interface?style=flat-square)
+![License: GNU](https://img.shields.io/github/v/release/froido/universal_simulation_coupling_interface?style=flat-square)
 ![DOI](https://img.shields.io/static/v1?label=DOI&message=DOIDOIDOI&color=blue&style=flat-square)
 
 > This framework can be used to partially couple two or more simulations. 
@@ -49,7 +49,7 @@ Reach out to me at one of the following places!
 
 ## License
 
-![License: GNU](https://img.shields.io/github/license/froido/simulation_coupling_interface?style=flat-square)
+![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
 
 ---
