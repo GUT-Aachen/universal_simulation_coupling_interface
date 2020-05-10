@@ -26,7 +26,8 @@ class AbaqusEngine:
             self.log.error(f'Cannot find input_file {input_file}')
             raise FileNotFoundError
         if not self.input_file.suffix == '.inp':
-            self.log.error(f'Expected an Simulia Abaqus input file with .inp suffix instead of {self.input_file.suffix}')
+            self.log.error(f'Expected an Simulia Abaqus input file with .inp suffix instead '
+                           f'of {self.input_file.suffix}')
             raise FileNotFoundError
 
         # Read input file and save in an array
@@ -430,8 +431,8 @@ class AbaqusEngine:
             self.log.error(str(err))
             return 0
 
-    def write_input_file_restart(self, set_work_name: str, job_name: str, path, previous_input_file: str, step_name: str,
-                                 restart_step: str, resume: bool = True):
+    def write_input_file_restart(self, set_work_name: str, job_name: str, path, previous_input_file: str,
+                                 step_name: str, restart_step: str, resume: bool = True):
         """ This function modifies the previous input file and saves it in instances output folder with the name
         'job_name'.inp. This new file is a Abaqus restart input file.
 
@@ -463,7 +464,7 @@ class AbaqusEngine:
             previous_input_file = Path(previous_input_file)
             if not previous_input_file.is_file():
                 self.log.error(f'Previous input file cannot be found at {previous_input_file}')
-                return 0
+                raise FileNotFoundError
 
             # Read input file and save in an array
             previous_input_file_data = previous_input_file.read_text().split('\n')
@@ -484,13 +485,14 @@ class AbaqusEngine:
 
             # If the simulation shall not be resumed, all steps (but Geostatic-Step) will be copied
             # into the new input file
+            # TODO Check if comments in root input file exist otherwise throw error
             if not resume:
                 for line in previous_input_file_data:
                     if '** restart_point_python_placeholder' in line:
                         copy_input_file = 1
 
                     if copy_input_file:
-                        input_file_text.append(line)
+                        input_file_text.append(f'{line} \n')
 
             # Write new step
             self.log.debug('Begin Step')  # TODO Possibility to modify step parameters
