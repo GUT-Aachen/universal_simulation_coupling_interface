@@ -13565,6 +13565,7 @@ Part-1.C, 0.00001
 *Initial Conditions, TYPE=RATIO
 Part-1.D, 1.
 ** ----------------------------------------------------------------
+** restart_point_python_placeholder
 ** 
 ** STEP: Geostatic
 ** 
