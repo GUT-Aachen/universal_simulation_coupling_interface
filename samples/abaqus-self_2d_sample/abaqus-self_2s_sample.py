@@ -186,9 +186,18 @@ for x in range(0, number_of_steps):
     abaqus_handler.engine.copy_previous_result_files(previous_step['abaqus'].path, actual_step['abaqus'].path)
 
     # Prepare input and batch file
-    name = f'{sim.name}_{step_name}'
+    actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
     abaqus_handler.set_file(f'input_file_{step_name}',
-                            abaqus_handler.engine.write_input_file('PP', name, actual_step['abaqus'].get_path()))
+                            abaqus_handler.engine.write_input_file_restart('PP',
+                                                                           actual_step['abaqus'].get_prefix(),
+                                                                           actual_step['abaqus'].get_path(),
+                                                                           abaqus_handler.get_file(f'input_file_'
+                                                                                                   f'{previous_step["abaqus"].name}'),
+                                                                           actual_step['abaqus'].name,
+                                                                           previous_step["abaqus"].step_no + 1,
+                                                                           # Set to False if each sim should
+                                                                           # start at the very beginning
+                                                                           True))
 
     abaqus_handler.set_file(f'bash_file_{step_name}',
                             abaqus_handler.engine.write_bash_file(
@@ -196,7 +205,8 @@ for x in range(0, number_of_steps):
                                 abaqus_handler.get_file(f'input_file_{step_name}'),  # Path of input file for this step
                                 abaqus_handler.get_file('subroutine'),  # Path of user subroutine
                                 True,  # Shall scratch path be used for simulation?
-                                'cpus=2 interactive'  # Add any valid abaqus parameter in here
+                                'cpus=2 interactive',  # Add any valid abaqus parameter in here
+                                previous_step['abaqus'].get_prefix()
                             ))
 
     # Call the subprocess
