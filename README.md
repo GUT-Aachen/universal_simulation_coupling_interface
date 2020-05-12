@@ -31,7 +31,7 @@
 ## Setup
  - Check for python package dependencies
  - Download latest release of USCI to your local machine
- - Construct you own simulation workflow or try one of the [samples](samples)
+ - Construct your own individual simulation workflow or try one of the [samples](samples)
   
 ---
 
