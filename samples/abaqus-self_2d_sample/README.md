@@ -62,10 +62,13 @@ Therefore a new iteration step is initialized in the Simulation Handler object b
 The values for pore pressure of the previous step will be randomized.
 This means that the simulation results itself are not taken into account in this simulation, which is a very low level type of a pseudo coupling.  
 
+---
 
-![SimulationResults](results.gif "Simulation results: pore pressure changes due to modified boundary conditions")
+## Results
 
 Here you can see a summary of the six iteration steps and the changing pore pressure.
+
+![SimulationResults](results.gif "Simulation results: pore pressure changes due to modified boundary conditions")
 
 ---
 
