@@ -9,6 +9,10 @@
 > External function to change pore pressure values in this case, is a randomize function included in this framework.
 > It can be useful for test purposes, while developing a new engine for this framework. 
 
+## Requirements
+
+ - Simulia Abaqus Standard Engine
+
 ## Description/Usage
 
 Simulia Abaqus simulations are controlled by an input file (.inp).
@@ -74,7 +78,7 @@ Here you can see a summary of the six iteration steps and the changing pore pres
 
 ## Workflow
 
-[logo]: workflow.png "Workflow of this simulation"
+![SimulationWorkflow](workflow.png "Flowchart showing the simulations workflow")
 
  1. Set root path
  2. Start logging
@@ -86,11 +90,5 @@ Here you can see a summary of the six iteration steps and the changing pore pres
  8. Set name of part to be modified
  9. Prepare first step: set step name; add step to Simulation Handler object; copy grid from Abaqus input file into Grid object; create initial boundary conditions for pore pressure with constant value and store in Grid object; create input file; create bash file;
  10. Run first iteration step of simulation
- 11. Iterate through following steps: set step name; add step to Simulation Handler object; randomize pore pressure values in grid and store for new step; create boundary conditions for input file; create Abaqus input file; create bash file; run simulation step;  
- 
----
-
-## Requirements
-
- - Simulia Abaqus Standard Engine
+ 11. Iterate through following steps: set step name; add step to Simulation Handler object; randomize pore pressure values in grid and store for new step; create boundary conditions for input file; create Abaqus input file; create bash file; run simulation step;
 
