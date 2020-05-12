@@ -53,7 +53,7 @@ After, a list of all node sets depending on the partition part ``Part-1`` is cre
 In a second step boundary conditions are created depending on the node set list (PP), the boundary condition (8) and the grid values for this actual step.
 The boundary condition must be set according to the Simulia Abaqus manual.
 Boundary condition 8 stands for pore pressure.
-An input file for Simulia Abaqus will be written and and stored in the specified output path ``output/initial/initial_PseudoCoupling.inp``.
+An input file for Simulia Abaqus will be written and and stored in the specified output path ``output/step_initial/PseudoCoupling_initial.inp``.
 A bash file for this iteration step's simulation is created and stored at the same place as the input file and will be run.
 The Python's subprocess library calls the bash file and keeps the focus on the simulation until it ends.
 
@@ -66,7 +66,7 @@ This means that the simulation results itself are not taken into account in this
 
 ## Workflow
 
-[logo]: https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 2"
+[logo]: workflow.png "Workflow if this simulation"
 
  1. Set root path
  2. Start logging
