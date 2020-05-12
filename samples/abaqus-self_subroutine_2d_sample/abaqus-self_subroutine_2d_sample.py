@@ -1,6 +1,9 @@
 import logging
 import sys
 from pathlib import Path
+
+from utils.grid import Grid
+from utils.grid_transformer import GridTransformer
 from utils.simulation_handler import SimulationHandler
 from utils.random_grid import GaussRandomizeGrid
 
@@ -56,7 +59,6 @@ abaqus_handler = sim.add_engine('abaqus')
 # Scratch: Abaqus can use a scratch folder so store temporary files
 abaqus_handler.set_path('input', sim.get_input_path())
 abaqus_handler.set_path('output', sim.get_output_path() / 'abaqus')
-abaqus_handler.set_path('scratch', abaqus_handler.get_path('output') / 'scratch')
 
 # To get an output from Abaqus at the end of each iteration step, a so called user subroutine is needed.
 # Name of Abaqus subroutine-file (f95) stored in ./input/
@@ -102,8 +104,6 @@ actual_step['abaqus'].create_step_folder(abaqus_handler.get_path('output'))
 # decouples the input file and the grid completely. Each nodes values can now be stored in this grid object.
 actual_step['abaqus'].grid.initiate_grid(abaqus_handler.engine.get_nodes(abaqus_part_name))
 
-abaqus_handler.engine.paths['scratch'] = abaqus_handler.get_path('scratch')
-
 # To modify boundary conditions within a simulation in Abaqus node sets have to be defined. Here we want to change
 # the pore pressure at each node of Part-1. Therefore a each node needs its own set. In a first step all nodes get their
 # individual names like
@@ -138,21 +138,21 @@ abaqus_handler.set_file(f'input_file_{step_name}',
 # In the bash file a couple of parameters can be set to run the simulation.
 abaqus_handler.set_file(f'bash_file_{step_name}',
                         abaqus_handler.engine.write_bash_file(
-                            actual_step['abaqus'].get_path(),  # Path of the actual step output
-                            abaqus_handler.get_file(f'input_file_{step_name}'),  # Path of input file for this step
-                            abaqus_handler.get_file('subroutine'),  # Path of user subroutine
-                            True,  # Shall scratch path be used for simulation?
-                            'cpus=2 interactive'  # Add any valid abaqus parameter in here
+                            # Path of the actual step output
+                            path=actual_step['abaqus'].get_path(),
+                            # Path of input file for this step
+                            input_file_path=abaqus_handler.get_file(f'input_file_{step_name}'),
+                            # Path of user subroutine
+                            user_subroutine_path=abaqus_handler.get_file('subroutine'),
+                            # Add any valid abaqus parameter in here
+                            additional_parameters='cpus=2 interactive'
                         ))
 
 # Start the simulation by calling a sub process
 sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
-# abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
-#                         f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')
-# abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
-#                         f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
-
+abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
+                        f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')
 
 # Next iteration steps
 for x in range(0, number_of_steps):
@@ -166,8 +166,24 @@ for x in range(0, number_of_steps):
 
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
-    node_value_dict = previous_step['abaqus'].grid.get_node_values('pore_pressure')
+    pore_pressure_import = abaqus_handler.engine.read_csv_file(
+        abaqus_handler.get_file(f'ouput_file_{previous_step["abaqus"].name}_pore-pressure'))
 
+    # Initiate a new temporary grid for imported pore pressure
+    pore_pressure_import_grid = Grid()
+    pore_pressure_import_grid.initiate_grid(pore_pressure_import, 'pore_pressure')
+
+    # Transform pore pressure from imported grid to abaqus engine's grid
+    transformer = GridTransformer()
+    transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
+    transformer.add_grid(pore_pressure_import_grid, 'import')
+    transformer.find_nearest_neighbors('import', 'abaqus', 4)
+    transformer.transition('import', 'pore_pressure', 'abaqus')
+
+    # Read previously imported pore pressure dict from actual step into node_value_dict
+    node_value_dict = actual_step['abaqus'].grid.get_node_values('pore_pressure')
+
+    # Randomize the imported pore pressure values
     randomize = GaussRandomizeGrid()  # Initialize GaussRandomizeGrid class
     abaqus_rand_data = randomize.get_random_data_set(
         node_value_dict,  # Input dictionary (or list)
@@ -201,12 +217,16 @@ for x in range(0, number_of_steps):
 
     abaqus_handler.set_file(f'bash_file_{step_name}',
                             abaqus_handler.engine.write_bash_file(
-                                actual_step['abaqus'].get_path(),  # Path of the actual step output
-                                abaqus_handler.get_file(f'input_file_{step_name}'),  # Path of input file for this step
-                                abaqus_handler.get_file('subroutine'),  # Path of user subroutine
-                                True,  # Shall scratch path be used for simulation?
-                                'cpus=2 interactive',  # Add any valid abaqus parameter in here
-                                previous_step['abaqus'].get_prefix()
+                                # Path of the actual step output
+                                path=actual_step['abaqus'].get_path(),
+                                # Path of input file for this step
+                                input_file_path=abaqus_handler.get_file(f'input_file_{step_name}'),
+                                # Path of user subroutine
+                                user_subroutine_path=abaqus_handler.get_file('subroutine'),
+                                # Add any valid abaqus parameter in here
+                                additional_parameters='cpus=2 interactive',
+                                # Name of the old job to resume
+                                old_job_name=previous_step['abaqus'].get_prefix()
                             ))
 
     # Call the subprocess
@@ -217,3 +237,6 @@ for x in range(0, number_of_steps):
     sim.engines['abaqus'].engine.clean_previous_files(
         previous_step['abaqus'].name,  # Name of previous step
         actual_step['abaqus'].path)  # Path to the actual output folder
+
+    abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
+                            f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')
