@@ -61,9 +61,10 @@ In the upcoming four iteration steps the boundary conditions stored in the grid 
 Therefore a new iteration step is initialized in the Simulation Handler object by copying the previous step.
 The values for pore pressure of the previous step will be randomized.
 This means that the simulation results itself are not taken into account in this simulation, which is a very low level type of a pseudo coupling.    
-
+<center>
 ![SimulationResults](results.gif "Simulation results: pore pressure changes due to modified boundary conditions")
-
+Here you can see a summary of the six iteration steps and the changing pore pressure.
+</center>
 ---
 
 ## Workflow
