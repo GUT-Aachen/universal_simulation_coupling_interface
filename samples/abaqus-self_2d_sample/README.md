@@ -66,7 +66,7 @@ This means that the simulation results itself are not taken into account in this
 
 ## Workflow
 
-[logo]: workflow.png "Workflow if this simulation"
+[logo]: workflow.png "Workflow of this simulation"
 
  1. Set root path
  2. Start logging
