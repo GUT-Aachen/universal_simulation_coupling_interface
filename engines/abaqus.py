@@ -9,9 +9,9 @@ import shutil
 
 class AbaqusEngine:
     """ Specific class to handle Simulia Abaqus simulation software. This class is able to handle reading and writing
-    input files as well as modifing it. This class is also used to read and write ascii files produced by the software.
+    input files as well as modifying it. This class is also used to read and write ascii files produced by the software.
     The simulation is controlled by a batch file, which can be created in respect to different parameters like the
-    used operation system (linux/windows), the numbers of cpus or if a user subroutine should be used..
+    used operation system (linux/windows), the numbers of CPUs or if a user subroutine should be used..
     """
 
     def __init__(self, input_file):
@@ -26,7 +26,8 @@ class AbaqusEngine:
             self.log.error(f'Cannot find input_file {input_file}')
             raise FileNotFoundError
         if not self.input_file.suffix == '.inp':
-            self.log.error(f'Expected an Simulia Abaqus Inputfile with .inp suffix instead of {self.input_file.suffix}')
+            self.log.error(f'Expected an Simulia Abaqus input file with .inp suffix instead '
+                           f'of {self.input_file.suffix}')
             raise FileNotFoundError
 
         # Read input file and save in an array
@@ -41,7 +42,7 @@ class AbaqusEngine:
         for text in self.placeholder_input_file.values():
             if text not in self.data:
                 log.warning(f'To modify or create additional input files minor placeholders have to be set in the '
-                            f'initial input file. Otherwise errors will occure. The following placeholder is'
+                            f'initial input file. Otherwise errors will occurre. The following placeholder is'
                             f' missing: {text}')
 
         self.node_set = {}
@@ -104,7 +105,7 @@ class AbaqusEngine:
             # Variable set to True when node information have been found.
             read_coordinates = False
 
-            # Initialize empty list for collecting dictionarys.
+            # Initialize empty list for collecting dictionaries.
             node_list = []
 
             # Check each line of input file
@@ -153,7 +154,7 @@ class AbaqusEngine:
                         node_list.append(node_dict)
 
                     except Exception as err:
-                        self.log.warning(f'An error occured while reading coordinates for nodes in line '
+                        self.log.warning(f'An error occurred while reading coordinates for nodes in line '
                                          f'{line_string}. Error: {str(err)}')
 
             self.log.info('Added %s nodes with x/y/z-coordinates', len(node_list))
@@ -229,7 +230,7 @@ class AbaqusEngine:
 
         Args:
             prev_job_folder: path to the previous iteration step results
-            current_job_folder: path to the current iteratin step output
+            current_job_folder: path to the current iteration step output
 
         Returns:
             boolean: True on success
@@ -239,11 +240,11 @@ class AbaqusEngine:
         if not Path(current_job_folder).is_dir():
             shutil.copytree(prev_job_folder, current_job_folder)
         else:
-            self.log.error(f'{current_job_folder} allready exists')
+            self.log.error(f'{current_job_folder} already exists')
         return True
 
     def clean_previous_files(self, step_name, current_job_folder):
-        """ After a successfull iteration step, which is not the initial step, the files of the previous simulation are
+        """ After a successful iteration step, which is not the initial step, the files of the previous simulation are
         deleted from the current simulation. See .copy_previous_results_files().
 
         Args:
@@ -255,7 +256,8 @@ class AbaqusEngine:
         """
         # Remove files from previous simulation
         # Current folder is looped and every file consisting of the previous job name will be deleted
-        self.log.info(f'Removing files of previous simulation ({step_name})from current subfolder: {current_job_folder}')
+        self.log.info(f'Removing files of previous simulation ({step_name})from '
+                      f'current sub folder: {current_job_folder}')
         for dir_name, dir_names, file_names in os.walk(current_job_folder):
             for filename in file_names:
                 if step_name in filename:
@@ -319,16 +321,28 @@ class AbaqusEngine:
                 bc_dict
             """
 
+        # Check input parameters
+        if not isinstance(set_work_name, str) \
+                or not isinstance(node_values_dict, dict) \
+                or not isinstance(bc_1_name, int) \
+                or not isinstance(bc_2_name, int):
+            self.log.error(f'Input parameters do not fit the needed type:'
+                           f'"set_work_name" should be str is {type(set_work_name).__name__}; '
+                           f'"node_values_dict" should be dict is {type(node_values_dict).__name__}; '
+                           f'"bc_1_name" should be int is {type(bc_1_name).__name__}; '
+                           f'"bc_2_name" should be int is {type(bc_2_name).__name__};')
+            raise TypeError
+
         # Check if the set_work_name exists in instance
         if set_work_name in self.node_set:
             if 'set_names' in self.node_set[set_work_name]:
                 node_set_names_dict = self.node_set[set_work_name]['set_names']
             else:
                 self.log.error(f'"set_names" not found in {self.node_set[set_work_name].keys()}')
-                return 0
+                raise KeyError
         else:
             self.log.error(f'Set_work_name {set_work_name} not found in {self.node_set.keys()}')
-            return 0
+            raise KeyError
 
         # If only one boundary condition is given, the second must fit the first one, according to Abaqus manual
         if bc_2_name == 0:
@@ -340,7 +354,7 @@ class AbaqusEngine:
         for node_number in node_values_dict:
             if node_number not in node_set_names_dict.keys():
                 self.log.error(f'Node {node_number} not found in node sets in .node_set[{set_work_name}][set_names]')
-                return 0
+                raise KeyError
 
         try:
             # Every node gets its own boundary condition as shown below:
@@ -358,12 +372,12 @@ class AbaqusEngine:
 
         except Exception as err:
             self.log.error(str(err))
-            return 0
+            raise Exception
 
     def write_input_file(self, set_work_name: str, job_name: str, path):
         """
         This function modifies the initial input file and saves it in instances output folder with the name
-         'job_name'.inp. To modify the input file, spcific placeholders have to be placed in the initial input
+         'job_name'.inp. To modify the input file, specific placeholders have to be placed in the initial input
          file.
 
         Args:
@@ -417,15 +431,16 @@ class AbaqusEngine:
             self.log.error(str(err))
             return 0
 
-    def write_input_file_restart(self, set_work_name: str, job_name: str, previous_input_file: str, step_name: str,
-                                 restart_step: str, resume: bool = True):
+    def write_input_file_restart(self, set_work_name: str, job_name: str, path, previous_input_file: str,
+                                 step_name: str, restart_step: str, resume: bool = True):
         """ This function modifies the previous input file and saves it in instances output folder with the name
         'job_name'.inp. This new file is a Abaqus restart input file.
 
         Args:
-            set_work_name: Name to load/save the set in instance
-            job_name: Name of the Abaqus job
-            previous_input_file: Path of the privious Abaqus input file
+            set_work_name (str): Name to load/save the set in instance
+            job_name (str): Name of the Abaqus job
+            path (Path):  Where to save input-file
+            previous_input_file: Path of the previous Abaqus input file
             step_name: name of the step
             restart_step: step from where to restart
             resume: Tells if the simulation shall start from the beginning or if the last step shall be resumed.
@@ -449,12 +464,12 @@ class AbaqusEngine:
             previous_input_file = Path(previous_input_file)
             if not previous_input_file.is_file():
                 self.log.error(f'Previous input file cannot be found at {previous_input_file}')
-                return 0
+                raise FileNotFoundError
 
             # Read input file and save in an array
             previous_input_file_data = previous_input_file.read_text().split('\n')
 
-            input_file = self.paths['output'] / f'{job_name}.inp'
+            input_file = path / f'{job_name}.inp'
 
             input_file_text = []
 
@@ -470,13 +485,14 @@ class AbaqusEngine:
 
             # If the simulation shall not be resumed, all steps (but Geostatic-Step) will be copied
             # into the new input file
+            # TODO Check if comments in root input file exist otherwise throw error
             if not resume:
                 for line in previous_input_file_data:
                     if '** restart_point_python_placeholder' in line:
                         copy_input_file = 1
 
                     if copy_input_file:
-                        input_file_text.append(line)
+                        input_file_text.append(f'{line} \n')
 
             # Write new step
             self.log.debug('Begin Step')  # TODO Possibility to modify step parameters
@@ -531,7 +547,7 @@ class AbaqusEngine:
 
         except Exception as err:
             self.log.error(str(err))
-            return 0
+            raise err
 
     def set_path(self, path_name, path):
         """ Set paths, for example scratch or output path.
@@ -564,8 +580,13 @@ class AbaqusEngine:
             self.log.error(str(err))
             return False
 
-    def write_bash_file(self, path: Path, input_file_path: str, user_subroutine_path: str = None, use_scratch_path: bool = False,
-                        additional_parameters: str = None, old_job_name: str = None):
+    def write_bash_file(self,
+                        path: Path,
+                        input_file_path: str,
+                        user_subroutine_path: str = None,
+                        use_scratch_path: bool = False,
+                        additional_parameters: str = None,
+                        old_job_name: str = None):
         """ Function to create bash file, depending on the subsystem (windows or linux) to execute Abaqus
             simulation in console.
 
@@ -574,7 +595,7 @@ class AbaqusEngine:
             input_file_path (str): Input filename including path
             user_subroutine_path (str): User subroutine filename including path (optional)
             use_scratch_path (bool): Shall a scratch folder be used. Folder has to be defined via function
-            .set_path('scratch') (optional)
+                .set_path('scratch') (optional)
             old_job_name (str): name of the old job (optional)
             additional_parameters (str): Additional parameters to be used for the execution of the simulation (optional)
 
@@ -601,22 +622,22 @@ class AbaqusEngine:
                 bash_file = path / f'{job_name}.bat'
 
                 # Create the command line for the bash file according to given function input parameters.
-                cmd_string = f'call abaqus job={job_name} input={input_file}'
+                cmd_string = f'call abaqus job="{job_name}" input="{input_file}"'
 
-                # Check if oldjob parameter is given and add parameter to command line
+                # Check if old job parameter is given and add parameter to command line
                 if old_job_name:
-                    cmd_string = f'{cmd_string} oldjob={old_job_name}'
+                    cmd_string = f'{cmd_string} oldjob="{old_job_name}"'
 
                 # Add user subroutine to command line
                 if user_subroutine_path:
-                    cmd_string = f'{cmd_string} user={user_subroutine_path}'
+                    cmd_string = f'{cmd_string} user="{user_subroutine_path}"'
 
                 # Check if scratch parameter is given and add parameter to command line
                 if use_scratch_path:
                     if not self.paths['scratch'].is_dir():
                         self.log.error(f'Scratch path must be assigned first via function .set_path("scratch", str)')
                         return False
-                    cmd_string = f'{cmd_string} scratch={self.paths["scratch"]}'
+                    cmd_string = f'{cmd_string} scratch="{self.paths["scratch"]}"'
 
                 # Add additional parameters to command line
                 if additional_parameters:
@@ -634,7 +655,8 @@ class AbaqusEngine:
 
             except Exception as err:
                 self.log.error(str(err))
-                return False
+                raise err
+
         elif os.name == 'posix':
             self.log.error('Batch file builder for Unix not implemented yet.')
         else:

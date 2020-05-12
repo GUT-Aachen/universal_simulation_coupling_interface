@@ -27,6 +27,7 @@ class IterationStep:
 
         self.grid = Grid()
         self.name = iteration_name
+        self.prefix = None
         self.computing_time = None
         self.time = None
         self.path = Path()
@@ -65,6 +66,12 @@ class IterationStep:
     @computing_time.setter
     def computing_time(self, value):
         self._computing_time = value
+
+    def set_prefix(self, prefix: str):
+        self.prefix = prefix
+
+    def get_prefix(self):
+        return self.prefix
 
     def set_step_folder(self, parent_folder):
         """
