@@ -56,12 +56,6 @@ abaqus_handler = sim.add_engine('abaqus')
 # Scratch: Abaqus can use a scratch folder so store temporary files
 abaqus_handler.set_path('input', sim.get_input_path())
 abaqus_handler.set_path('output', sim.get_output_path() / 'abaqus')
-abaqus_handler.set_path('scratch', abaqus_handler.get_path('output') / 'scratch')
-
-# To get an output from Abaqus at the end of each iteration step, a so called user subroutine is needed.
-# Name of Abaqus subroutine-file (f95) stored in ./input/
-abaqus_subroutine_file_name = 'subroutine_export.f'
-abaqus_handler.set_file('subroutine', abaqus_handler.get_path('input') / abaqus_subroutine_file_name)
 
 # Set Abaqus input file to Abaqus engine
 abaqus_handler.set_file('input_file', abaqus_handler.get_path('input') / 'abaqus_pseudo_coupling.inp')
@@ -81,7 +75,6 @@ abaqus_part_name = 'Part-1'
 # Log environmental variables to make the log traceable
 log.debug(f'root_directory: {sim.get_root_path()}')
 log.debug(f'simulation_handler_name: {sim.name}')
-log.debug(f'abaqus_subroutine_file_name: {abaqus_handler.get_file("subroutine")}')
 log.info(f'number_of_iterations: {number_of_steps}')
 
 # #################################################################################
@@ -101,8 +94,6 @@ actual_step['abaqus'].create_step_folder(abaqus_handler.get_path('output'))
 # The initial grid/mesh will be read from the Abaqus input file and stored in a grid object in the actual step. This
 # decouples the input file and the grid completely. Each nodes values can now be stored in this grid object.
 actual_step['abaqus'].grid.initiate_grid(abaqus_handler.engine.get_nodes(abaqus_part_name))
-
-abaqus_handler.engine.paths['scratch'] = abaqus_handler.get_path('scratch')
 
 # To modify boundary conditions within a simulation in Abaqus node sets have to be defined. Here we want to change
 # the pore pressure at each node of Part-1. Therefore a each node needs its own set. In a first step all nodes get their
@@ -138,22 +129,18 @@ abaqus_handler.set_file(f'input_file_{step_name}',
 # In the bash file a couple of parameters can be set to run the simulation.
 abaqus_handler.set_file(f'bash_file_{step_name}',
                         abaqus_handler.engine.write_bash_file(
-                            actual_step['abaqus'].get_path(),  # Path of the actual step output
-                            abaqus_handler.get_file(f'input_file_{step_name}'),  # Path of input file for this step
-                            abaqus_handler.get_file('subroutine'),  # Path of user subroutine
-                            True,  # Shall scratch path be used for simulation?
-                            'cpus=2 interactive'  # Add any valid abaqus parameter in here
+                            # Path of the actual step output
+                            path=actual_step['abaqus'].get_path(),
+                            # Path of input file for this step
+                            input_file_path=abaqus_handler.get_file(f'input_file_{step_name}'),
+                            # Add any valid abaqus parameter in here
+                            additional_parameters='cpus=2 interactive'
                         ))
 
 # Start the simulation by calling a sub process
 sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
-# abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
-#                         f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')
-# abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
-#                         f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
-
-
+#######################################################################################################################
 # Next iteration steps
 for x in range(0, number_of_steps):
     # Set name for next steps.
@@ -201,12 +188,14 @@ for x in range(0, number_of_steps):
 
     abaqus_handler.set_file(f'bash_file_{step_name}',
                             abaqus_handler.engine.write_bash_file(
-                                actual_step['abaqus'].get_path(),  # Path of the actual step output
-                                abaqus_handler.get_file(f'input_file_{step_name}'),  # Path of input file for this step
-                                abaqus_handler.get_file('subroutine'),  # Path of user subroutine
-                                True,  # Shall scratch path be used for simulation?
-                                'cpus=2 interactive',  # Add any valid abaqus parameter in here
-                                previous_step['abaqus'].get_prefix()
+                                # Path of the actual step output
+                                path=actual_step['abaqus'].get_path(),
+                                # Path of input file for this step
+                                input_file_path=abaqus_handler.get_file(f'input_file_{step_name}'),
+                                # Add any valid abaqus parameter in here
+                                additional_parameters='cpus=2 interactive',
+                                # Name of the old job to resume
+                                old_job_name=previous_step['abaqus'].get_prefix()
                             ))
 
     # Call the subprocess
