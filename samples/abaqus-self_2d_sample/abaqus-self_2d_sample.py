@@ -56,7 +56,6 @@ abaqus_handler = sim.add_engine('abaqus')
 # Scratch: Abaqus can use a scratch folder so store temporary files
 abaqus_handler.set_path('input', sim.get_input_path())
 abaqus_handler.set_path('output', sim.get_output_path() / 'abaqus')
-abaqus_handler.set_path('scratch', abaqus_handler.get_path('output') / 'scratch')
 
 # Set Abaqus input file to Abaqus engine
 abaqus_handler.set_file('input_file', abaqus_handler.get_path('input') / 'abaqus_pseudo_coupling.inp')
@@ -96,8 +95,6 @@ actual_step['abaqus'].create_step_folder(abaqus_handler.get_path('output'))
 # decouples the input file and the grid completely. Each nodes values can now be stored in this grid object.
 actual_step['abaqus'].grid.initiate_grid(abaqus_handler.engine.get_nodes(abaqus_part_name))
 
-abaqus_handler.engine.paths['scratch'] = abaqus_handler.get_path('scratch')
-
 # To modify boundary conditions within a simulation in Abaqus node sets have to be defined. Here we want to change
 # the pore pressure at each node of Part-1. Therefore a each node needs its own set. In a first step all nodes get their
 # individual names like
@@ -136,8 +133,6 @@ abaqus_handler.set_file(f'bash_file_{step_name}',
                             path=actual_step['abaqus'].get_path(),
                             # Path of input file for this step
                             input_file_path=abaqus_handler.get_file(f'input_file_{step_name}'),
-                            # Shall scratch path be used for simulation?
-                            use_scratch_path=True,
                             # Add any valid abaqus parameter in here
                             additional_parameters='cpus=2 interactive'
                         ))
@@ -197,8 +192,6 @@ for x in range(0, number_of_steps):
                                 path=actual_step['abaqus'].get_path(),
                                 # Path of input file for this step
                                 input_file_path=abaqus_handler.get_file(f'input_file_{step_name}'),
-                                # Shall scratch path be used for simulation?
-                                use_scratch_path=True,
                                 # Add any valid abaqus parameter in here
                                 additional_parameters='cpus=2 interactive',
                                 # Name of the old job to resume
