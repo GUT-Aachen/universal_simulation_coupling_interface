@@ -11,7 +11,7 @@
 
 ## Description
 
-Simulia Abaqus Simulations are controlled by a input file.
+Simulia Abaqus Simulations are controlled by an input file (.inp).
 These input files contain any information necessary to run a simulation: mesh; partitioning; material parameters; loads; contacts; step dependent information; output parameters;
 The Abaqus engine extracts the mesh from the input file ``input/abaqus_pseudo_coupling.inp`` and stores it in a grid object.
 This grid object is bound to a specific iteration step and can be changed each iteration. 
