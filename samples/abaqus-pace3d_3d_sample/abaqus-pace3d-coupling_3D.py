@@ -57,7 +57,7 @@ pace3d_pore_pressure_file_name = 'pace3D_pore-pressure.dat'
 # Set Pace3D paths and files
 pace3d_handler.set_path('input', sim.get_input_path())
 pace3d_handler.set_path('output', sim.get_output_path() / 'pace3d')
-pace3d_handler.set_file('pore_pressure', pace3d_handler.get_path('input') / pace3d_pore_pressure_file_name)
+# pace3d_handler.set_file('pore_pressure', pace3d_handler.get_path('input') / pace3d_pore_pressure_file_name) # FIXME missing file
 # Initialize Pace3D engine
 pace3d_handler.init_engine()
 
@@ -76,8 +76,7 @@ abaqus_handler.init_engine({'input_file': abaqus_handler.get_file('input_file')}
 log.debug(f'root_directory: {sim.get_root_path()}')
 log.debug(f'simulation_handler_name: {sim.name}')
 log.debug(f'abaqus_subroutine_file_name: {abaqus_handler.get_file("subroutine")}')
-log.debug(f'pace3d_pore_pressure_file_name: {pace3d_handler.get_file("pore_pressure")}')
-log.debug(f'pace3d_pore_pressure_initial_file_name: {pace3d_handler.get_file("initial_pore_pressure")}')
+# log.debug(f'pace3d_pore_pressure_file_name: {pace3d_handler.get_file("pore_pressure")}')  # FIXME missing file
 log.info(f'number_of_iterations: {number_of_steps}')
 
 # #################################################################################
