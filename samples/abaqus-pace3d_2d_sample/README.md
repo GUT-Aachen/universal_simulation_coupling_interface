@@ -39,7 +39,7 @@ Some Pace3D simulation stuff can/will be done next and a pore pressure distribut
 This distribution is loaded into the Grid object.  
 Here ends the initial iteration step.
 
-The upcoming steps (in this case only one) are eewonjiewonifew:
+The upcoming steps (in this case only one) are establishes as follows:
 In General a new step is created in the SimulationHandler object with a specific name, here it is step_x.
 The pore pressure results from the Pace3D simulation, already stored in the Pace3D engine's Grid object will be transformed to Abaqus engine's Grid object.
 This distribution will be used to create new pore pressure boundary conditions for the Abaqus simulation.
