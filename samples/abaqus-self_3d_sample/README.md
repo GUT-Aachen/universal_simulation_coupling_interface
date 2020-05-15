@@ -68,11 +68,21 @@ This means that the simulation results itself are not taken into account in this
 
 ---
 
-## Results
+## Simulation Results
 
 Here you can see a summary of the six iteration steps and the changing pore pressure.
 
-![SimulationResults](results.gif "Simulation results: pore pressure changes due to modified boundary conditions")
+![SimulationResultsPorePressure](results_pore_pressure.gif "Simulation results: pore pressure changes due to modified boundary conditions")
+
+Pore pressure changes due to modified boundary conditions (view on top of partition reservoir-1-crop/-cropped, cut in y-direction)
+
+![SimulationResultsStress](results_stress.gif "Simulation results: stress changes due to modified pore pressure boundary conditions")
+
+Stress (z-direction) changes due to modified pore pressure boundary conditions (view on top of partition reservoir-1-crop/-cropped, cut in y-direction)
+
+![SimulationResultsDisplacement](results_displacement.gif "Simulation results: displacement changes due to modified pore pressure boundary conditions")
+
+Displacement (z-direction, + settlement, - heave) changes due to modified pore pressure boundary conditions (view on top of partition reservoir-1-crop/-cropped, cut in y-direction)
 
 ---
 
