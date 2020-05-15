@@ -70,7 +70,8 @@ number_of_steps = 5
 # According to the Abaqus engine a specific part has to be defined for the coupling. In more complex simulations
 # multiple parts can be chosen and coupled. The name must be the same as shown in the Abaqus input file
 # in the input folder (abaqus_pseudo_coupling.inp, see line 16).
-abaqus_part_name = 'Part-1'
+abaqus_part_name = 'Reservoir-1-Crop'
+abaqus_assembly_name = 'Reservoir-1-Crop-1'
 
 # Log environmental variables to make the log traceable
 log.debug(f'root_directory: {sim.get_root_path()}')
@@ -103,7 +104,7 @@ abaqus_handler.engine.create_node_set_names('PP', actual_step['abaqus'].grid)
 # In a second step a dictionary by node numbers and set_name like
 # 234: *Nset, nset = node-234, internal, instance = Part-1 \n 234
 # will be created in the engine.
-abaqus_handler.engine.create_node_set_all_list('PP', 'Part-1')
+abaqus_handler.engine.create_node_set_all_list('PP', abaqus_assembly_name)
 
 # A individual pore pressure can be set for each node. In this sample we set the pore pressure to a constant value of
 # 62000000 N/m² at any node.
