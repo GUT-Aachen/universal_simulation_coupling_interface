@@ -18,7 +18,7 @@
 
 In this sample a 3d underground model is used.
 The model is stored in the Simulia Abaqus input file ``input/abaqus_pseudo_coupling.inp``.
-Edge length of the model is X/Y/Z xx/yy/zz in meter.
+Edge length of the model is 7,200/3,800/5,350 (X/Y/Z) in meter.
 The model is divided into six parts.
 Only the parts ``Reservoir-1-cropped`` and ``Reservoir-1-crop`` are relevant in this case.
 
