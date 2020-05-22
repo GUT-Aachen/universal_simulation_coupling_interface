@@ -12,7 +12,7 @@ class Pace3dEngine:
 
     def read_csv_file(self, file: str, delimiter: str = ' ',
                       x_coord_row: int = 0, y_coord_row: int = 1, z_coord_row: int = 2,
-                      values_row: int = 3):
+                      values_row: dict = {'data': 3}):
         """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
                  Parameters:
@@ -21,7 +21,8 @@ class Pace3dEngine:
                     x_coord_row (int), optional: row number for x-coordinate (default: 0)
                     y_coord_row (int), optional: row number for y-coordinate (default: 1)
                     z_coord_row (int), optional: row number for z-coordinate (default: 2)
-                    values_row (int), optional:  row number for values (default: 3)
+                    values_row (int), optional:  dictionary containing data set name and row number for values
+                                                (default: data:3)
 
                 Returns:
                     ndarray(dict)
@@ -46,18 +47,33 @@ class Pace3dEngine:
                 for row in read_csv:
                     try:
                         # Check if actual row has the needed length
-                        if len(row) >= max(x_coord_row, y_coord_row, z_coord_row, values_row) + 1:
+                        if len(row) >= max(x_coord_row, y_coord_row, z_coord_row, max(values_row.items())) + 1:
                             if z_coord_row != -1:
-                                lines.append({'x_coordinate': float(row[x_coord_row]),
-                                              'y_coordinate': float(row[y_coord_row]),
-                                              'z_coordinate': float(row[z_coord_row]),
-                                              'value': float(row[values_row])
+                                x_coord = float(row[x_coord_row])
+                                y_coord = float(row[y_coord_row])
+                                z_coord = float(row[z_coord_row])
+                                values = {}
+
+                                for key, item in values_row:
+                                    values[key] = float(row[item])
+
+                                lines.append({'x_coordinate': x_coord,
+                                              'y_coordinate': y_coord,
+                                              'z_coordinate': z_coord,
+                                              'values': values
                                               })
+
                             else:
-                                lines.append({'x_coordinate': float(row[x_coord_row]),
-                                              'y_coordinate': float(row[y_coord_row]),
-                                              'z_coordinate': float(row[z_coord_row]),
-                                              'value': float(row[values_row])
+                                x_coord = float(row[x_coord_row])
+                                y_coord = float(row[y_coord_row])
+                                values = {}
+
+                                for key, item in values_row:
+                                    values[key] = float(row[item])
+
+                                lines.append({'x_coordinate': x_coord,
+                                              'y_coordinate': y_coord,
+                                              'values': values
                                               })
                         else:
                             self.log.info(f'Empty or to short row found. Continue... [{row.__str__()}]')
