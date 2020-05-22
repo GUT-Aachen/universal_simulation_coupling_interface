@@ -98,7 +98,14 @@ class Grid:
         data = []
 
         for node in self.nodes.values():
-            data.append(node.coordinates)
+            line = []
+            for row in node.coordinates:
+                line.append(row)
+
+            for item in node.values.values():
+                line.append(item)
+
+            data.append(line)
 
         return data
 
