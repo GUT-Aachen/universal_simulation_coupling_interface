@@ -87,6 +87,21 @@ class Grid:
 
         return coordinates
 
+    def get_list(self):
+        """
+        Returns a tuple of all saved grid data
+
+        Returns:
+            tuple
+        """
+
+        data = []
+
+        for node in self.nodes.values():
+            data.append(node.coordinates)
+
+        return data
+
     def set_node_values(self, value_name: str, node_dict: dict, ):
         """
         Saving value-node-combinations from a dictionary to the nodes in the grid.
