@@ -70,7 +70,7 @@ class Grid:
             return 0
 
         except KeyError as err:
-            log.error(f'Key {value_name} not found. {err}')
+            log.error(f'Key {node_number} not found. {err}')
             return 0
 
     def get_coordinates_array(self):
