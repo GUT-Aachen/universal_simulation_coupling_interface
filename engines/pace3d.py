@@ -28,6 +28,10 @@ class Pace3dEngine:
                     ndarray(dict)
                 """
 
+        if not isinstance(values_row, dict):
+            self.log.error(f'Optional parameter values_row expects dictionary, is {type(values_row)}.')
+            return False
+
         try:
             file = Path(file)
 
@@ -47,14 +51,14 @@ class Pace3dEngine:
                 for row in read_csv:
                     try:
                         # Check if actual row has the needed length
-                        if len(row) >= max(x_coord_row, y_coord_row, z_coord_row, max(values_row.items())) + 1:
+                        if len(row) >= max(x_coord_row, y_coord_row, z_coord_row, max(values_row.values())) + 1:
                             if z_coord_row != -1:
                                 x_coord = float(row[x_coord_row])
                                 y_coord = float(row[y_coord_row])
                                 z_coord = float(row[z_coord_row])
                                 values = {}
 
-                                for key, item in values_row:
+                                for key, item in values_row.items():
                                     values[key] = float(row[item])
 
                                 lines.append({'x_coordinate': x_coord,
