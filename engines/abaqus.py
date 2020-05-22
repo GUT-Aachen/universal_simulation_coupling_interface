@@ -501,7 +501,7 @@ class AbaqusEngine:
             input_file_text.append(f'** \n')
             input_file_text.append(f'*Step, name={step_name}, nlgeom=NO, amplitude=RAMP, inc=10000 \n')
             input_file_text.append(f'*Soils, consolidation, end=PERIOD, utol=50000., creep=none \n')
-            input_file_text.append(f'6000., 43200., 1e-05, 6000., \n')
+            input_file_text.append(f'172800., 2246400., 1e-05, 172800., \n')
 
             self.log.debug(f'Step: Adding boundary conditions')
             input_file_text.append(f'** \n')
