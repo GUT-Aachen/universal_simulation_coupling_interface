@@ -215,6 +215,7 @@ class Grid:
         Args:
             data_set: dict including grid information
             value_name: name of the values
+            clear_first: shall the grid be cleared before importing data set?
 
         Returns:
             boolean: true on success
@@ -253,6 +254,14 @@ class Grid:
                             input_dict['values'] = {value_name: row['value']}
                         else:
                             input_dict['values'] = {'data': row['value']}
+
+                    if 'values' in row:
+                        if isinstance(row['values'], dict):
+                            input_dict['values'] = row['values']
+
+                        else:
+                            self.log.warning(f'Input dictionary pretends to include a dictionary for values, but '
+                                             f'found {type(row["values"])}.')
 
                     if 'node_number' in row:
                         input_dict['node_number'] = row['node_number']
