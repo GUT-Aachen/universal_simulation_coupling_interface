@@ -35,7 +35,7 @@ simulation_name = 'AbaqusPace3dCoupling'
 number_of_steps = 1
 abaqus_part_name = 'Reservoir-1-Crop'
 abaqus_assembly_name = 'Reservoir-1-Crop-1'
-abaqus_initial_pore_pressure_value = 62000000  # Constant pore pressure value in N/m²
+abaqus_initial_pore_pressure_value = 60000000  # Constant pore pressure value in N/m²
 
 # Initialize simulation handler
 sim = SimulationHandler(simulation_name)
@@ -57,7 +57,7 @@ pace3d_pore_pressure_file_name = 'pace3D_pore-pressure.dat'
 # Set Pace3D paths and files
 pace3d_handler.set_path('input', sim.get_input_path())
 pace3d_handler.set_path('output', sim.get_output_path() / 'pace3d')
-# pace3d_handler.set_file('pore_pressure', pace3d_handler.get_path('input') / pace3d_pore_pressure_file_name) # FIXME missing file
+pace3d_handler.set_file('pore_pressure', pace3d_handler.get_path('input') / pace3d_pore_pressure_file_name)
 # Initialize Pace3D engine
 pace3d_handler.init_engine()
 
@@ -76,7 +76,7 @@ abaqus_handler.init_engine({'input_file': abaqus_handler.get_file('input_file')}
 log.debug(f'root_directory: {sim.get_root_path()}')
 log.debug(f'simulation_handler_name: {sim.name}')
 log.debug(f'abaqus_subroutine_file_name: {abaqus_handler.get_file("subroutine")}')
-# log.debug(f'pace3d_pore_pressure_file_name: {pace3d_handler.get_file("pore_pressure")}')  # FIXME missing file
+log.debug(f'pace3d_pore_pressure_file_name: {pace3d_handler.get_file("pore_pressure")}')
 log.info(f'number_of_iterations: {number_of_steps}')
 
 # #################################################################################
@@ -132,45 +132,46 @@ abaqus_handler.set_file(f'bash_file_{step_name}',
                             use_scratch_path=True
                         ))
 
-# Start the simulation by calling a sub process
-sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
-
-# #################################################################################
-# Postprocessing Abaqus simulation
-abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
-                        f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
-
-# Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
-# as grid values. Those can be used to generate randomly lowered pore pressure values.
-void_ratio_import = abaqus_handler.engine.read_csv_file(
-    abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
-
-# Initiate a new temporary grid for imported pore pressure
-pore_pressure_import_grid = Grid()
-pore_pressure_import_grid.initiate_grid(void_ratio_import, 'void_ratio')
-
-# Transform void ratio from imported grid to abaqus engine's grid
-transformer = GridTransformer()
-transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
-transformer.add_grid(pore_pressure_import_grid, 'import')
-transformer.find_nearest_neighbors('import', 'abaqus', 4)
-transformer.transition('import', 'void_ratio', 'abaqus')
-
-# #################################################################################
-# PACE 3D STUFF
-# Prepare Transfer
-# Transfer Abaqus pore pressure results into Pace3D Grid object
-transformer = GridTransformer()
-transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
-transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
-transformer.find_nearest_neighbors('abaqus', 'pace3d', 4)
-transformer.transition('abaqus', 'void_ratio', 'pace3d')
+# # Start the simulation by calling a sub process
+# sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
+#
+# # #################################################################################
+# # Postprocessing Abaqus simulation
+# abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
+#                         f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
+#
+# # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
+# # as grid values. Those can be used to generate randomly lowered pore pressure values.
+# void_ratio_import = abaqus_handler.engine.read_csv_file(
+#     abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
+#
+# # Initiate a new temporary grid for imported pore pressure
+# pore_pressure_import_grid = Grid()
+# pore_pressure_import_grid.initiate_grid(void_ratio_import, 'void_ratio')
+#
+# # Transform void ratio from imported grid to abaqus engine's grid
+# transformer = GridTransformer()
+# transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
+# transformer.add_grid(pore_pressure_import_grid, 'import')
+# transformer.find_nearest_neighbors('import', 'abaqus', 4)
+# transformer.transition('import', 'void_ratio', 'abaqus')
+#
+# # #################################################################################
+# # PACE 3D STUFF
+# # Prepare Transfer
+# # Transfer Abaqus pore pressure results into Pace3D Grid object
+# transformer = GridTransformer()
+# transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
+# transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
+# transformer.find_nearest_neighbors('abaqus', 'pace3d', 4)
+# transformer.transition('abaqus', 'void_ratio', 'pace3d')
 
 # Transfer from grid to Pace3D
 # Start Pace3D Simulation
 
 # Transfer Pace3d simulation results into Grid object
-data = pace3d_handler.engine.read_csv_file(pace3d_handler.get_file('pore_pressure'))
+data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('pore_pressure'),
+                                           x_coord_row=4, y_coord_row=5, z_coord_row=6, values_row=3)
 actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
 
 # #################################################################################
@@ -235,7 +236,7 @@ for x in range(0, number_of_steps):
                                 # Name of the old job to resume
                                 old_job_name=previous_step['abaqus'].get_prefix()
                             ))
-
+    exit()
     sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
     sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
