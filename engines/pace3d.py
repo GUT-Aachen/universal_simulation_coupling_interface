@@ -72,7 +72,7 @@ class Pace3dEngine:
                                 y_coord = float(row[y_coord_row])
                                 values = {}
 
-                                for key, item in values_row:
+                                for key, item in values_row.items():
                                     values[key] = float(row[item])
 
                                 lines.append({'x_coordinate': x_coord,
