@@ -106,17 +106,24 @@ class Pace3dEngine:
         """
 
         try:
-
             file = Path(file)
 
-            if not Path(file.parent[0]).is_dir():
+            if not Path(file.parents[0]).is_dir():
                 self.log.error(f'Path to save file into {file.parent[0]} not found.')
-                raise FileNotFoundError
+                raise NotADirectoryError
+
+            if isinstance(data_array, list):
+                data_array = numpy.asarray(data_array)
 
             self.log.info(f'Write pace3D-data-file: {file}')
 
+            fmt = ""
+
+            for row in data_array[0]:
+                fmt = f'{fmt} %f'
+
             # Writing data to csv-file
-            numpy.savetxt(file, data_array, delimiter=delimiter, fmt='%i %i %f')
+            numpy.savetxt(file, data_array, delimiter=delimiter, fmt=fmt)
 
             return True
 
