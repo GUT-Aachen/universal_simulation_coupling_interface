@@ -98,10 +98,6 @@ class GridTransformer:
         grid_2_coordinates = self.grids[grid_name_2]['grid'].get_coordinates_array()
         grid_2_nodes = list(self.grids[grid_name_2]['grid'].nodes.keys())
 
-        # FIXME this has to be deleted later
-        for i in range(len(grid_1_coordinates)):
-            grid_1_coordinates[i] = (grid_1_coordinates[i][0], grid_1_coordinates[i][1], grid_1_coordinates[i][2] * -1)
-
         # TODO Check if coordinates in x/y/z direction of grid_1 are in range auf grid_2
         self.log.debug(f'Dimensions of {grid_name_1}:')
         self.log.debug(f'\t (x): {min(grid_1_coordinates)[0]} to {max(grid_1_coordinates)[0]}')
