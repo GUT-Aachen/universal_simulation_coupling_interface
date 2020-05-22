@@ -10,12 +10,18 @@ class Pace3dEngine:
     def __init__(self):
         self.log = log.getLogger(self.__class__.__name__)
 
-    def read_csv_file(self, file: str, delimiter: str = ' '):
+    def read_csv_file(self, file: str, delimiter: str = ' ',
+                      x_coord_row: int = 0, y_coord_row: int = 1, z_coord_row: int = 2,
+                      values_row: int = 3):
         """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
                  Parameters:
                     file (str): filename including path
                     delimiter (str), optional: delimiter used in ascii file
+                    x_coord_row (int), optional: row number for x-coordinate (default: 0)
+                    y_coord_row (int), optional: row number for y-coordinate (default: 1)
+                    z_coord_row (int), optional: row number for z-coordinate (default: 2)
+                    values_row (int), optional:  row number for values (default: 3)
 
                 Returns:
                     ndarray(dict)
@@ -23,6 +29,8 @@ class Pace3dEngine:
 
         try:
             file = Path(file)
+
+            # TODO Check if row fits to given data
 
             if not file.is_file():
                 self.log.error(f'File {file} not found.')
@@ -37,14 +45,22 @@ class Pace3dEngine:
 
                 for row in read_csv:
                     try:
-                        if len(row) == 4:
-                            lines.append({'x_coordinate': float(row[0]),
-                                          'y_coordinate': float(row[1]),
-                                          'z_coordinate': float(row[2]),
-                                          'value': float(row[3])})
-
-                        if len(row) != 4:
-                            self.log.info(f'Empty row found or transition failed. Continue...')
+                        # Check if actual row has the needed length
+                        if len(row) >= max(x_coord_row, y_coord_row, z_coord_row, values_row) + 1:
+                            if z_coord_row != -1:
+                                lines.append({'x_coordinate': float(row[x_coord_row]),
+                                              'y_coordinate': float(row[y_coord_row]),
+                                              'z_coordinate': float(row[z_coord_row]),
+                                              'value': float(row[values_row])
+                                              })
+                            else:
+                                lines.append({'x_coordinate': float(row[x_coord_row]),
+                                              'y_coordinate': float(row[y_coord_row]),
+                                              'z_coordinate': float(row[z_coord_row]),
+                                              'value': float(row[values_row])
+                                              })
+                        else:
+                            self.log.info(f'Empty or to short row found. Continue... [{row.__str__()}]')
 
                     except Exception as err:
                         self.log.info(f'Empty row found or transition failed. Continue... [{err}]')
