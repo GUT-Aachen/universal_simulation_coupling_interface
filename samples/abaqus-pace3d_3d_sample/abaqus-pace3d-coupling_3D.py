@@ -132,34 +132,29 @@ abaqus_handler.set_file(f'bash_file_{step_name}',
                             use_scratch_path=True
                         ))
 
-# # Start the simulation by calling a sub process
-# sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
-#
-# # #################################################################################
-# # Postprocessing Abaqus simulation
-# abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
-#                         f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
-#
-# # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
-# # as grid values. Those can be used to generate randomly lowered pore pressure values.
-# void_ratio_import = abaqus_handler.engine.read_csv_file(
-#     abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
-#
-# # Initiate a new temporary grid for imported pore pressure
-# pore_pressure_import_grid = Grid()
-# pore_pressure_import_grid.initiate_grid(void_ratio_import, 'void_ratio')
-#
-# # Transform void ratio from imported grid to abaqus engine's grid
-# transformer = GridTransformer()
-# transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
-# transformer.add_grid(pore_pressure_import_grid, 'import')
-# transformer.find_nearest_neighbors('import', 'abaqus', 4)
-# transformer.transition('import', 'void_ratio', 'abaqus')
-#
-# # #################################################################################
-# # PACE 3D STUFF
-# # Prepare Transfer
-# # Transfer Abaqus pore pressure results into Pace3D Grid object
+# Start the simulation by calling a sub process
+sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
+
+# #################################################################################
+# Postprocessing Abaqus simulation
+abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
+                        f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
+
+# Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
+# as grid values. Those can be used to generate randomly lowered pore pressure values.
+void_ratio_import = abaqus_handler.engine.read_csv_file(
+    abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
+
+# Initiate a new temporary grid for imported pore pressure
+pore_pressure_import_grid = Grid()
+pore_pressure_import_grid.initiate_grid(void_ratio_import, 'void_ratio')
+
+# This was just an initial step and no further actions are needed to be done with the outcome of this step.
+
+# #################################################################################
+# PACE 3D STUFF
+# Prepare Transfer
+# Transfer Abaqus pore pressure results into Pace3D Grid object
 # transformer = GridTransformer()
 # transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
 # transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
@@ -171,7 +166,14 @@ abaqus_handler.set_file(f'bash_file_{step_name}',
 
 # Transfer Pace3d simulation results into Grid object
 data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('pore_pressure'),
-                                           x_coord_row=4, y_coord_row=5, z_coord_row=6, values_row=3)
+                                           x_coord_row=4, y_coord_row=5, z_coord_row=6,
+                                           values_row={'pore_pressure': 3, 'local_x': 0, 'local_y': 1, 'local_z': 2})
+# Z-dimension in Pace3D is negative in Abaqus positive. Manipulate z-coordinates by multiplying by -1. Pore pressure is
+# given in bar should be N/m²: multiply by 100000.
+for row in data:
+    row['z_coordinate'] = row['z_coordinate'] * -1
+    row['values']['pore_pressure'] = row['values']['pore_pressure'] * 100000
+
 actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
 
 # #################################################################################
@@ -236,7 +238,7 @@ for x in range(0, number_of_steps):
                                 # Name of the old job to resume
                                 old_job_name=previous_step['abaqus'].get_prefix()
                             ))
-    exit()
+
     sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
     sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
@@ -260,6 +262,13 @@ for x in range(0, number_of_steps):
     transformer.find_nearest_neighbors('import', 'abaqus', 4)
     transformer.transition('import', 'void_ratio', 'abaqus')
 
+    data_dict = actual_step['abaqus'].grid.get_node_values('void_ratio')
+
+    for key, item in data_dict.items():
+        data_dict[key] = item / (1 + item)
+
+    actual_step['abaqus'].grid.set_node_values('porosity', data_dict)
+
     # #################################################################################
     # PACE 3D STUFF
     # Prepare Transfer
@@ -268,7 +277,10 @@ for x in range(0, number_of_steps):
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
     transformer.find_nearest_neighbors('abaqus', 'pace3d', 4)
-    transformer.transition('abaqus', 'void_ratio', 'pace3d')
+    transformer.transition('abaqus', 'porosity', 'pace3d')
+
+    data = actual_step['pace3d'].grid.get_list()
+    pace3d_handler.engine.write_csv_file(data, actual_step['abaqus'].get_path() / 'porosity.dat')
 
     # Transfer from grid to Pace3D
     # Start Pace3D Simulation
