@@ -148,7 +148,7 @@ class Grid:
             for node in self.nodes.values():
                 value = node.get_value(value_name)
                 if isinstance(value, int) or isinstance(value, float):
-                    node_value_dict[node.node_number] = node.get_value(value_name)
+                    node_value_dict[node.node_number] = value
 
             if len(node_value_dict):
                 return node_value_dict
