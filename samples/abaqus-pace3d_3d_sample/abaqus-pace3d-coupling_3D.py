@@ -176,6 +176,7 @@ for row in data:
 
 actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
 
+
 # #################################################################################
 # Next Iteration
 for x in range(0, number_of_steps):
@@ -213,17 +214,28 @@ for x in range(0, number_of_steps):
     abaqus_handler.set_file(f'input_file_{step_name}',
                             abaqus_handler.engine.write_input_file('PP', name, actual_step['abaqus'].get_path()))
 
+    # Change step time each step
+    if x == 0:
+        step_time_total = 2246400
+        step_time_increment_max = 172800
+    elif x == 1:
+        step_time_total = 8294400
+        step_time_increment_max = 518400
+
     abaqus_handler.set_file(f'input_file_{step_name}',
-                            abaqus_handler.engine.write_input_file_restart('PP',
-                                                                           actual_step['abaqus'].get_prefix(),
-                                                                           actual_step['abaqus'].get_path(),
-                                                                           abaqus_handler.get_file(f'input_file_'
-                                                                                                   f'{previous_step["abaqus"].name}'),
-                                                                           actual_step['abaqus'].name,
-                                                                           previous_step["abaqus"].step_no + 1,
-                                                                           # Set to False if each sim should
-                                                                           # start at the very beginning
-                                                                           True))
+                            abaqus_handler.
+                            engine.write_input_file_restart('PP',
+                                                            job_name=actual_step['abaqus'].get_prefix(),
+                                                            path=actual_step['abaqus'].get_path(),
+                                                            previous_input_file=abaqus_handler.get_file(
+                                                                f'input_file_{previous_step["abaqus"].name}'),
+                                                            step_name=actual_step['abaqus'].name,
+                                                            restart_step=previous_step["abaqus"].step_no + 1,
+                                                            step_time_total=step_time_total,
+                                                            step_time_increment_max=step_time_increment_max,
+                                                            # Set to False if each sim should
+                                                            # start at the very beginning
+                                                            resume=True))
 
     abaqus_handler.set_file(f'bash_file_{step_name}',
                             abaqus_handler.engine.write_bash_file(
@@ -238,7 +250,7 @@ for x in range(0, number_of_steps):
                                 # Name of the old job to resume
                                 old_job_name=previous_step['abaqus'].get_prefix()
                             ))
-
+    exit()
     sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
     sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
@@ -276,7 +288,7 @@ for x in range(0, number_of_steps):
     transformer = GridTransformer()
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
-    transformer.find_nearest_neighbors('abaqus', 'pace3d', 4)
+    transformer.find_nearest_neighbors('abaqus', 'pace3d', 2)
     transformer.transition('abaqus', 'porosity', 'pace3d')
 
     data = actual_step['pace3d'].grid.get_list()
