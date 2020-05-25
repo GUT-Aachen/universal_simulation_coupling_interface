@@ -171,7 +171,11 @@ abaqus_handler.set_file(f'bash_file_{step_name}',
 
 # Transfer Pace3d simulation results into Grid object
 data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('pore_pressure'),
-                                           x_coord_row=4, y_coord_row=5, z_coord_row=6, values_row=3)
+                                           x_coord_row=4, y_coord_row=5, z_coord_row=6,
+                                           values_row={'pore_pressure': 3, 'local_x': 0, 'local_y': 1, 'local_z': 2})
+# Z-dimension in Pace3D is negative in Abaqus positive. Manipulate z-coordinates by multiplying by -1.
+for row in data:
+    row['z_coordinate'] = row['z_coordinate'] * -1
 actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
 
 # #################################################################################
@@ -194,8 +198,16 @@ for x in range(0, number_of_steps):
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
 
-    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
+    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2, 230)
+    transformer.find_nearest_neighbors('abaqus', 'pace3d', 2, 230)
+
+    transformer.nearest_neighbors_stat('pace3d')
+    transformer.nearest_neighbors_stat('abaqus')
+
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
+    transformer.transition('abaqus', 'pore_pressure', 'pace3d')
+
+    transformer.transformation_validation('pace3d', 'pore_pressure', 'abaqus')
 
     abaqus_handler.engine.create_boundary_condition('PP',
                                                     actual_step['abaqus'].grid.get_node_values('pore_pressure'),
@@ -211,17 +223,28 @@ for x in range(0, number_of_steps):
     abaqus_handler.set_file(f'input_file_{step_name}',
                             abaqus_handler.engine.write_input_file('PP', name, actual_step['abaqus'].get_path()))
 
+    # Change step time each step
+    if x == 0:
+        step_time_total = 2246400
+        step_time_increment_max = 172800
+    elif x == 1:
+        step_time_total = 8294400
+        step_time_increment_max = 518400
+
     abaqus_handler.set_file(f'input_file_{step_name}',
-                            abaqus_handler.engine.write_input_file_restart('PP',
-                                                                           actual_step['abaqus'].get_prefix(),
-                                                                           actual_step['abaqus'].get_path(),
-                                                                           abaqus_handler.get_file(f'input_file_'
-                                                                                                   f'{previous_step["abaqus"].name}'),
-                                                                           actual_step['abaqus'].name,
-                                                                           previous_step["abaqus"].step_no + 1,
-                                                                           # Set to False if each sim should
-                                                                           # start at the very beginning
-                                                                           True))
+                            abaqus_handler.
+                            engine.write_input_file_restart('PP',
+                                                            job_name=actual_step['abaqus'].get_prefix(),
+                                                            path=actual_step['abaqus'].get_path(),
+                                                            previous_input_file=abaqus_handler.get_file(
+                                                                f'input_file_{previous_step["abaqus"].name}'),
+                                                            step_name=actual_step['abaqus'].name,
+                                                            restart_step=previous_step["abaqus"].step_no + 1,
+                                                            step_time_total=step_time_total,
+                                                            step_time_increment_max=step_time_increment_max,
+                                                            # Set to False if each sim should
+                                                            # start at the very beginning
+                                                            resume=True))
 
     abaqus_handler.set_file(f'bash_file_{step_name}',
                             abaqus_handler.engine.write_bash_file(
@@ -236,7 +259,7 @@ for x in range(0, number_of_steps):
                                 # Name of the old job to resume
                                 old_job_name=previous_step['abaqus'].get_prefix()
                             ))
-    exit()
+
     sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
     sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
@@ -246,8 +269,7 @@ for x in range(0, number_of_steps):
 
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
-    void_ratio_import = abaqus_handler.engine.read_csv_file(
-        abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
+    void_ratio_import = abaqus_handler.engine.read_csv_file(root_directory / 'void-ratio.csv')
 
     # Initiate a new temporary grid for imported pore pressure
     pore_pressure_import_grid = Grid()
