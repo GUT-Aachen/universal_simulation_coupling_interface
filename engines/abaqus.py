@@ -432,7 +432,9 @@ class AbaqusEngine:
             return 0
 
     def write_input_file_restart(self, set_work_name: str, job_name: str, path, previous_input_file: str,
-                                 step_name: str, restart_step: str, resume: bool = True):
+                                 step_name: str, restart_step: str,
+                                 step_time_total: int, step_time_increment_max: int,
+                                 resume: bool = True):
         """ This function modifies the previous input file and saves it in instances output folder with the name
         'job_name'.inp. This new file is a Abaqus restart input file.
 
@@ -443,6 +445,8 @@ class AbaqusEngine:
             previous_input_file: Path of the previous Abaqus input file
             step_name: name of the step
             restart_step: step from where to restart
+            step_time_total: total step time
+            step_time_increment_max: maximum time increment to simulate from 0 to total_step_time
             resume: Tells if the simulation shall start from the beginning or if the last step shall be resumed.
 
         Returns:
@@ -501,7 +505,7 @@ class AbaqusEngine:
             input_file_text.append(f'** \n')
             input_file_text.append(f'*Step, name={step_name}, nlgeom=NO, amplitude=RAMP, inc=10000 \n')
             input_file_text.append(f'*Soils, consolidation, end=PERIOD, utol=50000., creep=none \n')
-            input_file_text.append(f'172800., 2246400., 1e-05, 172800., \n')
+            input_file_text.append(f'{step_time_increment_max}., {step_time_total}., 1e-05, {step_time_increment_max}., \n')
 
             self.log.debug(f'Step: Adding boundary conditions')
             input_file_text.append(f'** \n')
