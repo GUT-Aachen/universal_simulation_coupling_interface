@@ -61,7 +61,7 @@ class GridTransformer:
     def find_nearest_neighbors(self, grid_name_1: str, grid_name_2: str, neighbors_quantity: int = 10,
                                distance_max: float = None):
         """
-        To tranfer the data from one grid to another a modified nearest neighbor approach is used. This method takes
+        To transfer the data from one grid to another a modified nearest neighbor approach is used. This method takes
         the coordinates of each point in two grids and searches for nearest neighbors. Thereby the first grid is the
         source and the second grid is the target, means that for each node in the target neighbors in the source are
         found. The amount of neighbors used for each node is set with the optional parameter neighbors_quantity.
@@ -114,6 +114,7 @@ class GridTransformer:
         dist, points = tree.query(grid_2_coordinates, neighbors_quantity)
 
         transform_dict = {}
+        count_lonely_nodes = 0
 
         # Iterate through the results to put them into a dictionary. Additionally the maximum distance will be
         # checked.
@@ -137,9 +138,13 @@ class GridTransformer:
             # Check if at least one neighbor was found according to the maximum distance. Otherwise exit method and
             # and log an error.
             if len(transform_dict[grid_2_nodes[i]]) == 0:
-                self.log.error(f'No neighbor found for node {grid_2_nodes[i]} in {grid_name_2}')
-                return False
+                self.log.debug(f'No neighbor found for node {grid_2_nodes[i]} in {grid_name_2}')
+                count_lonely_nodes += 1
+                transform_dict[grid_2_nodes[i]] = None
 
+        if count_lonely_nodes > 0:
+            self.log.warning(f'No neighbors found for {count_lonely_nodes} nodes in {grid_name_1} for {grid_name_2} in '
+                             f'a range of {distance_max}.')
         self.grids[grid_name_2]['transform'][grid_name_1] = transform_dict
         self.log.info(f'Nearest neighbors in {grid_name_1} found for {grid_name_2}')
 
@@ -224,10 +229,14 @@ class GridTransformer:
 
         for grid, node_list in self.grids[grid_name]['transform'].items():
             distances = []
+            count_lonely_nodes = 0
 
             for node, node_dict in node_list.items():
                 for item in node_dict:
-                    distances.append(item['distance'])
+                    if item['distance'] > 0:
+                        distances.append(item['distance'])
+                    else:
+                        count_lonely_nodes += 1
 
             distances = numpy.array(distances)
 
@@ -237,6 +246,7 @@ class GridTransformer:
             self.log.info(f'\t Std. Deviation: {numpy.nanstd(distances)}')
             self.log.info(f'\t Min: {numpy.ndarray.min(distances)}')
             self.log.info(f'\t Max: {numpy.ndarray.max(distances)}')
+            self.log.info(f'\t Lonely: {count_lonely_nodes}')
 
         self.log.info(f'End of Statistics')
 
@@ -292,26 +302,56 @@ class GridTransformer:
             self.log.info(f'Worst Match: {numpy.ndarray.max(numpy.absolute(data_end / data_begin))}')
             self.log.info(f'Worst Match: {numpy.ndarray.min(numpy.absolute(data_end / data_begin))}')
 
+            # # Generating the visual output
+            # self.log.info('Plotting 2d data sets to visually comparison')
+            # mpl_fig = plt.figure()
+            # ax1 = mpl_fig.add_subplot(221)
+            # cb1 = ax1.scatter(list(src_grid_begin.get_node_values('x_coordinate').values()),
+            #                   list(src_grid_begin.get_node_values('y_coordinate').values()),
+            #                   s=1, c=data_begin, cmap=plt.cm.get_cmap('RdBu'))
+            # plt.colorbar(cb1, ax=ax1)
+            # ax1.set_title('input (original)')
+            # ax2 = mpl_fig.add_subplot(222)
+            # cb2 = ax2.scatter(list(target_grid.get_node_values('x_coordinate').values()),
+            #                   list(target_grid.get_node_values('y_coordinate').values()),
+            #                   s=1, c=list(target_grid.get_node_values(value_name).values()),
+            #                   cmap=plt.cm.get_cmap('RdBu'))
+            # plt.colorbar(cb2, ax=ax2)
+            # ax2.set_title('output')
+            #
+            # ax3 = mpl_fig.add_subplot(223)
+            # cb3 = ax3.scatter(list(src_grid_end.get_node_values('x_coordinate').values()),
+            #                   list(src_grid_end.get_node_values('y_coordinate').values()),
+            #                   s=1, c=data_end, cmap=plt.cm.get_cmap('RdBu'))
+            # plt.colorbar(cb3, ax=ax3)
+            # ax3.set_title('input (retransformation)')
+            #
+            # # function to show the plot
+            # plt.show()
+            # #########################################################################################
             # Generating the visual output
-            self.log.info('Plotting datasets to visually comparison')
+            self.log.info('Plotting 3d data sets to visually comparison')
             mpl_fig = plt.figure()
-            ax1 = mpl_fig.add_subplot(221)
+            ax1 = mpl_fig.add_subplot(221, projection='3d')
             cb1 = ax1.scatter(list(src_grid_begin.get_node_values('x_coordinate').values()),
                               list(src_grid_begin.get_node_values('y_coordinate').values()),
+                              list(src_grid_begin.get_node_values('z_coordinate').values()),
                               s=1, c=data_begin, cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb1, ax=ax1)
             ax1.set_title('input (original)')
-            ax2 = mpl_fig.add_subplot(222)
+            ax2 = mpl_fig.add_subplot(222, projection='3d')
             cb2 = ax2.scatter(list(target_grid.get_node_values('x_coordinate').values()),
                               list(target_grid.get_node_values('y_coordinate').values()),
+                              list(target_grid.get_node_values('z_coordinate').values()),
                               s=1, c=list(target_grid.get_node_values(value_name).values()),
                               cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb2, ax=ax2)
             ax2.set_title('output')
 
-            ax3 = mpl_fig.add_subplot(223)
+            ax3 = mpl_fig.add_subplot(223, projection='3d')
             cb3 = ax3.scatter(list(src_grid_end.get_node_values('x_coordinate').values()),
                               list(src_grid_end.get_node_values('y_coordinate').values()),
+                              list(src_grid_end.get_node_values('z_coordinate').values()),
                               s=1, c=data_end, cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb3, ax=ax3)
             ax3.set_title('input (retransformation)')
