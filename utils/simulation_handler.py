@@ -39,8 +39,7 @@ class SimulationHandler:
         """
 
         if len(self.engines) == 0:
-            self.log.error(f'Before adding an iteration step, engines must be initialized!')
-            raise ValueError
+            raise ValueError(f'Before adding an iteration step, engines must be initialized!')
 
         steps = {}
 
@@ -51,6 +50,19 @@ class SimulationHandler:
         self.iterations.append(step_name)
 
         return steps
+
+    def clear_old_iterations(self):
+
+        if len(self.iterations) > 2:
+
+            # Iterate through the initialized engines and get iteration step
+            for engine in self.engines.values():
+                engine.iterations[len(engine.iterations) - 3] = None
+
+            return True
+
+        else:
+            return False
 
     def get_current_iterations(self):
         """ Get a dictionary of the current iteration step of all engines.
@@ -70,8 +82,7 @@ class SimulationHandler:
             return steps
 
         else:
-            self.log.error(f'No iterations available in this simulation.')
-            raise IndexError
+            raise IndexError(f'No iterations available in this simulation.')
 
     def get_previous_iterations(self):
         """ Get a dictionary of the previous iteration step of all engines.
@@ -114,8 +125,7 @@ class SimulationHandler:
             return self.engines[engine_name]
 
         else:
-            self.log.error(f'Error on adding EnginesHandler for {engine_name}.')
-            raise NameError
+            raise NameError(f'Error on adding EnginesHandler for {engine_name}.')
 
     def set_path(self, path_name, path, create_missing=True, cleanup=False):
         """ Set a global path like "root", "output" or "input". With the path_name the kind of path is defined. The
@@ -136,16 +146,14 @@ class SimulationHandler:
         # Check if path_name is valid
         valid_names = ['output', 'input', 'root']
         if path_name not in valid_names:
-            self.log.error(f'{path_name} is not part of {valid_names}')
-            raise NameError
+            raise NameError(f'{path_name} is not part of {valid_names}')
 
         try:
             path = Path(path)
 
             # Check if path is a file or folder
             if path.is_file():
-                self.log.error(f'Given path is a file. Path empty excepted.')
-                raise TypeError
+                raise TypeError(f'Given path is a file. Path empty excepted.')
 
             # Check if path exists
             if not path.is_dir():
@@ -165,12 +173,10 @@ class SimulationHandler:
                             self.log.debug(f'Checked and added output_path {path}')
                             return True
                         else:
-                            self.log.error(f'Not able to create output_path {path}')
-                            raise PermissionError
+                            raise PermissionError(f'Not able to create output_path {path}')
                 else:
-                    self.log.error(f'Path {path} does not exist. If you want to create the path automatically use '
-                                   f'the create_missing=True (default) option.')
-                    raise NotADirectoryError
+                    raise NotADirectoryError(f'Path {path} does not exist. If you want to create the path '
+                                             f'automatically use the create_missing=True (default) option.')
 
             else:
                 # Check if path is empty
@@ -189,8 +195,7 @@ class SimulationHandler:
                 return True
 
         except FileNotFoundError as err:
-            self.log.error(f'Error occured while setting path {path} as output_path. {err}')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Error occured while setting path {path} as output_path. {err}')
 
     def set_root_path(self, root_path, create_missing=True):
         """ Set the root path of the simulation and in addition the input and output path by standard values. To create
@@ -217,8 +222,7 @@ class SimulationHandler:
             if self.set_path('input', root_path / input_sub_folder, create_missing, False):
                 self.log.debug(f'Input path set for simulation {self.name} to {self.get_input_path()}')
         else:
-            self.log.error('Error while setting root path.')
-            raise OSError
+            raise OSError('Error while setting root path.')
 
         return True
 
@@ -253,8 +257,7 @@ class SimulationHandler:
 
         try:
             if path.is_file():
-                self.log.error(f'Given path is a file. Expected path.')
-                raise TypeError
+                raise TypeError(f'Given path is a file. Expected path.')
 
             # Remove and recreate path
             if path.is_dir():
@@ -275,8 +278,7 @@ class SimulationHandler:
             return True
 
         except Exception:
-            self.log.error(f'An error occured while cleaning up output_path {path}')
-            raise Exception
+            raise Exception(f'An error occured while cleaning up output_path {path}')
 
     def call_subprocess(self, batch_file, cwd_folder):
         """ Calling in the engines created batch files to run the simulations. The batch files will be ran in the
@@ -299,5 +301,5 @@ class SimulationHandler:
             self.log.debug('End of subprocess')
             return True
         else:
-            self.log.error(f'Batch-file or execution-folder do not exist. batch-file {batch_file}; execution-folder {folder}')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Batch-file or execution-folder do not exist. batch-file {batch_file}; '
+                                    f'execution-folder {folder}')
