@@ -11,8 +11,7 @@ class IterationsDict(dict):
 
     def add_iteration_step(self, iteration_name, step_no=None):
         if iteration_name in self:
-            self.log.error(f'Step with the same name ({iteration_name}) already exists.')
-            return 0
+            raise NameError(f'Step with the same name ({iteration_name}) already exists.')
         else:
             if not isinstance(step_no, int):
                 step_no = len(self)
@@ -33,6 +32,7 @@ class IterationStep:
         self.path = Path()
         self.step_no = step_no
         self.log = log.getLogger(f'{self.__class__.__name__}:{step_no}_{iteration_name}')
+
         self.log.debug(f'New iteration step initialized. name={self.name}; step_no={self.step_no}')
 
     def get_path(self):
@@ -116,5 +116,4 @@ class IterationStep:
             self.path = path
             return path
         if not path.is_dir():
-            self.log.error(f'Subfolder does not exist and can not be created. {path}')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Subfolder does not exist and can not be created. {path}')
