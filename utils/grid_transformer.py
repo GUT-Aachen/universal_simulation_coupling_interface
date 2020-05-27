@@ -1,11 +1,15 @@
 import logging as log
 from utils.grid import Grid
-from scipy.spatial import KDTree
+from scipy.spatial import KDTree  # nearest neighbor search
 import numpy
-import matplotlib.pyplot as plt  # used for visualisation of transformation validation
+import matplotlib.pyplot as plt  # visualisation of transformation validation
 
 
 class GridTransformer:
+    """ Grid Transformer is used to transform in a Grid object saved values from one Grid object to another. At the
+        at the moment the two Grid objects need to have the same origin. Otherwise the data transformation will lead to
+        unpredictable results.
+    """
 
     def __init__(self):
         self.log = log.getLogger(self.__class__.__name__)
@@ -14,7 +18,19 @@ class GridTransformer:
         self.transformation = []
 
     def __str__(self):
-        return f'{self.__class__.__name__} contains: grids={len(self.grids)}'
+        string = f'{self.__class__.__name__} contains {len(self.grids)} grids'
+        if len(self.grids) > 0:
+            string = f'{string}:'
+
+            for key in self.grids.keys():
+                string = f'{string} {key}'
+
+                if self.grids[key]['transform']:
+                    string = f'{string} (transformation mapping available);'
+                else:
+                    string = f'{string};'
+
+        return string
 
     def add_grid(self, grid: Grid, grid_name: str):
         """
@@ -28,8 +44,7 @@ class GridTransformer:
             boolean: true on success
         """
         if grid_name in self.grids:
-            self.log.error(f'Grid with name {grid_name} already exists. Please use .update_grid() instead.')
-            return False
+            raise KeyError(f'Grid with name {grid_name} already exists. Please use .update_grid() instead.')
         else:
             self.grids[grid_name] = {}
             self.grids[grid_name]['transform'] = {}
@@ -48,8 +63,8 @@ class GridTransformer:
             boolean: true on success
         """
         if grid_name not in self.grids:
-            self.log.error(f'Grid with name {grid_name} does not exists. Please use .add_grid() instead.')
-            return False
+            raise KeyError(f'Grid with name {grid_name} does not exists. Please use .add_grid() instead.')
+
         else:
             del self.grids['grid_name']
             self.grids[grid_name] = {}
@@ -59,7 +74,7 @@ class GridTransformer:
             return True
 
     def find_nearest_neighbors(self, grid_name_1: str, grid_name_2: str, neighbors_quantity: int = 10,
-                               distance_max: float = None):
+                               distance_max: float = numpy.inf):
         """
         To transfer the data from one grid to another a modified nearest neighbor approach is used. This method takes
         the coordinates of each point in two grids and searches for nearest neighbors. Thereby the first grid is the
@@ -83,12 +98,10 @@ class GridTransformer:
 
         # Check if grids exist
         if grid_name_1 not in self.grids:
-            self.log.error(f'Grid with name "{grid_name_1}" not found in {self.grids.keys()}')
-            return False
+            raise KeyError(f'Grid with name "{grid_name_1}" not found in {self.grids.keys()}')
 
         if grid_name_2 not in self.grids:
-            self.log.error(f'Grid with name "{grid_name_2}" not found in {self.grids.keys()}')
-            return False
+            raise KeyError(f'Grid with name "{grid_name_2}" not found in {self.grids.keys()}')
 
         self.log.debug(f'Start identifying nearest neighbors in {grid_name_1} for {grid_name_2}')
 
@@ -110,25 +123,28 @@ class GridTransformer:
         self.log.debug(f'\t (z): {min(grid_2_coordinates)[2]} to {max(grid_2_coordinates)[2]}')
 
         # Check for nearest neighbor
-        tree = KDTree(grid_1_coordinates)
-        dist, points = tree.query(grid_2_coordinates, neighbors_quantity)
+        self.log.debug(f'set initiate "grid_1_coordinates" as KDTree')
+        tree = KDTree(numpy.float32(grid_1_coordinates))
+        self.log.debug(f'tree.query on KDTree(grid_1_coordinates) and grid_2_coordinates')
+        dist, points = tree.query(numpy.float32(grid_2_coordinates), neighbors_quantity, distance_max)
 
         transform_dict = {}
         count_lonely_nodes = 0
 
         # Iterate through the results to put them into a dictionary. Additionally the maximum distance will be
         # checked.
+        self.log.debug(f'Check results from .query and save in dictionary')
         for i in range(len(dist)):
             # Initialize the dictionary entry for a node
             transform_dict[grid_2_nodes[i]] = []
 
             # Loop through all neighbors and check distance
             for k in range(len(dist[i])):  # FIXME problems when only 1 neighbor is used, because no list in dist
-                node = grid_1_nodes[points[i][k]]
+                node = grid_1_nodes[points[i][k]-1]
                 distance = dist[i][k]
 
                 # Easily just continue when the maximum distance is exceeded
-                if distance_max:
+                if distance_max != numpy.inf:
                     if distance > distance_max:
                         continue
 
@@ -167,43 +183,40 @@ class GridTransformer:
         """
         # Check if grids exist
         if src_grid_name not in self.grids:
-            self.log.error(f'Grid with name "{src_grid_name}" not found in {self.grids.keys()}')
-            raise KeyError
+            raise KeyError(f'Grid with name "{src_grid_name}" not found in {self.grids.keys()}')
         if target_grid_name not in self.grids:
-            self.log.error(f'Grid with name "{target_grid_name}" not found in {self.grids.keys()}')
-            raise KeyError
+            raise KeyError(f'Grid with name "{target_grid_name}" not found in {self.grids.keys()}')
 
         # Check if value exists in src_grid
         src_grid = self.grids[src_grid_name]
         target_grid = self.grids[target_grid_name]
         if not src_grid['grid'].get_node_values(value_name):
-            self.log.error(f'Value_name ({value_name}) not found in nodes.')
-            raise KeyError
+            raise KeyError(f'Value_name ({value_name}) not found in nodes.')
 
         src_values = src_grid['grid'].get_node_values(value_name)
 
         # Check if neighbors for this combination have been set
         if src_grid_name not in target_grid['transform']:
-            self.log.error(f'No transformation matrix has been found for {src_grid_name} to {target_grid_name}. '
+            raise KeyError(f'No transformation matrix has been found for {src_grid_name} to {target_grid_name}. '
                            f'Before transformation neighbors have to be found.')
-            raise KeyError
 
         for node, node_dict in target_grid['transform'][src_grid_name].items():
             sum_distance = 0
             factor = 0
 
-            # Calculating of the weighted average
-            for item in node_dict:
-                distance = item['distance']
-                node_number = item['node_number']
+            if node_dict:
+                # Calculating of the weighted average
+                for item in node_dict:
+                    distance = item['distance']
+                    node_number = item['node_number']
 
-                sum_distance += 1 / distance
-                value = src_values[node_number]
+                    sum_distance += 1 / distance
+                    value = src_values[node_number]
 
-                factor += value * 1 / distance
+                    factor += value * 1 / distance
 
-            result = factor / sum_distance
-            target_grid['grid'].nodes[node].set_value(value_name, result)
+                result = factor / sum_distance
+                target_grid['grid'].nodes[node].set_value(value_name, result)
 
         self.log.info(f'Transition for {value_name} from {src_grid_name} to {target_grid_name} successful')
         return True
@@ -221,8 +234,7 @@ class GridTransformer:
         """
         # Check if grids exist
         if grid_name not in self.grids:
-            self.log.error(f'Grid with name "{grid_name}" not found in {self.grids.keys()}')
-            return False
+            raise KeyError(f'Grid with name "{grid_name}" not found in {self.grids.keys()}')
 
         self.log.info(f'Statistics for: {grid_name}')
         self.log.info(f'Nodes: {len(self.grids[grid_name]["grid"])}')
@@ -231,12 +243,15 @@ class GridTransformer:
             distances = []
             count_lonely_nodes = 0
 
-            for node, node_dict in node_list.items():
-                for item in node_dict:
-                    if item['distance'] > 0:
-                        distances.append(item['distance'])
-                    else:
-                        count_lonely_nodes += 1
+            if node_list:
+                for node, node_dict in node_list.items():
+                    for item in node_dict:
+                        if item['distance'] > 0:
+                            distances.append(item['distance'])
+                        else:
+                            count_lonely_nodes += 1
+            else:
+                count_lonely_nodes += 1
 
             distances = numpy.array(distances)
 
@@ -332,14 +347,14 @@ class GridTransformer:
             # Generating the visual output
             self.log.info('Plotting 3d data sets to visually comparison')
             mpl_fig = plt.figure()
-            ax1 = mpl_fig.add_subplot(221, projection='3d')
+            ax1 = mpl_fig.add_subplot(221)
             cb1 = ax1.scatter(list(src_grid_begin.get_node_values('x_coordinate').values()),
                               list(src_grid_begin.get_node_values('y_coordinate').values()),
                               list(src_grid_begin.get_node_values('z_coordinate').values()),
                               s=1, c=data_begin, cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb1, ax=ax1)
             ax1.set_title('input (original)')
-            ax2 = mpl_fig.add_subplot(222, projection='3d')
+            ax2 = mpl_fig.add_subplot(222)
             cb2 = ax2.scatter(list(target_grid.get_node_values('x_coordinate').values()),
                               list(target_grid.get_node_values('y_coordinate').values()),
                               list(target_grid.get_node_values('z_coordinate').values()),
@@ -348,7 +363,7 @@ class GridTransformer:
             plt.colorbar(cb2, ax=ax2)
             ax2.set_title('output')
 
-            ax3 = mpl_fig.add_subplot(223, projection='3d')
+            ax3 = mpl_fig.add_subplot(223)
             cb3 = ax3.scatter(list(src_grid_end.get_node_values('x_coordinate').values()),
                               list(src_grid_end.get_node_values('y_coordinate').values()),
                               list(src_grid_end.get_node_values('z_coordinate').values()),
