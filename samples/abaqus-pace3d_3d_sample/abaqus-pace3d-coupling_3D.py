@@ -32,7 +32,7 @@ log = logging.getLogger('sample' + '.main')  # Define a logger for __main__ file
 
 # Set simulation name
 simulation_name = 'AbaqusPace3dCoupling'
-number_of_steps = 1
+number_of_steps = 2
 abaqus_part_name = 'Reservoir-1-Crop'
 abaqus_assembly_name = 'Reservoir-1-Crop-1'
 abaqus_initial_pore_pressure_value = 60000000  # Constant pore pressure value in N/m²
@@ -52,12 +52,14 @@ sim.output_path_cleanup()  # Clean up process for output folder
 abaqus_subroutine_file_name = 'subroutine_export.f'
 abaqus_input_file_name = 'abaqus_coupling.inp'
 # Name of Pace3D pore pressure file (csv) stored in ./input/
-pace3d_pore_pressure_file_name = 'pace3D_pore-pressure.dat'
+pace3d_pore_pressure_01_file_name = 'pace3D_pressure_01.dat'
+pace3d_pore_pressure_02_file_name = 'pace3D_pressure_02.dat'
 
 # Set Pace3D paths and files
 pace3d_handler.set_path('input', sim.get_input_path())
 pace3d_handler.set_path('output', sim.get_output_path() / 'pace3d')
-pace3d_handler.set_file('pore_pressure', pace3d_handler.get_path('input') / pace3d_pore_pressure_file_name)
+pace3d_handler.set_file('pore_pressure_01', pace3d_handler.get_path('input') / pace3d_pore_pressure_01_file_name)
+pace3d_handler.set_file('pore_pressure_02', pace3d_handler.get_path('input') / pace3d_pore_pressure_02_file_name)
 # Initialize Pace3D engine
 pace3d_handler.init_engine()
 
@@ -76,7 +78,6 @@ abaqus_handler.init_engine({'input_file': abaqus_handler.get_file('input_file')}
 log.debug(f'root_directory: {sim.get_root_path()}')
 log.debug(f'simulation_handler_name: {sim.name}')
 log.debug(f'abaqus_subroutine_file_name: {abaqus_handler.get_file("subroutine")}')
-log.debug(f'pace3d_pore_pressure_file_name: {pace3d_handler.get_file("pore_pressure")}')
 log.info(f'number_of_iterations: {number_of_steps}')
 
 # #################################################################################
@@ -165,7 +166,7 @@ pore_pressure_import_grid.initiate_grid(void_ratio_import, 'void_ratio')
 # Start Pace3D Simulation
 
 # Transfer Pace3d simulation results into Grid object
-data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('pore_pressure'),
+data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('pore_pressure_01'),
                                            x_coord_row=4, y_coord_row=5, z_coord_row=6,
                                            values_row={'pore_pressure': 3, 'local_x': 0, 'local_y': 1, 'local_z': 2})
 # Z-dimension in Pace3D is negative in Abaqus positive. Manipulate z-coordinates by multiplying by -1. Pore pressure is
@@ -186,6 +187,7 @@ for x in range(0, number_of_steps):
     step_name = f'step_{x + 1}'
     actual_step = sim.add_iteration_step(step_name, copy_previous=True)
     previous_step = sim.get_previous_iterations()  # for quick access
+    # sim.clear_old_iterations()
 
     # #################################################################################
     # SIMULIA ABAQUS STUFF
@@ -197,7 +199,7 @@ for x in range(0, number_of_steps):
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
 
-    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
+    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2, 200)
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
 
     abaqus_handler.engine.create_boundary_condition('PP',
@@ -218,9 +220,11 @@ for x in range(0, number_of_steps):
     if x == 0:
         step_time_total = 2246400
         step_time_increment_max = 172800
+        pace3d_file_next = 'pore_pressure_02'
     elif x == 1:
-        step_time_total = 8294400
-        step_time_increment_max = 518400
+        step_time_total = 5961600
+        step_time_increment_max = 345600
+        pace3d_file_next = 'pore_pressure_02'
 
     abaqus_handler.set_file(f'input_file_{step_name}',
                             abaqus_handler.
@@ -250,7 +254,7 @@ for x in range(0, number_of_steps):
                                 # Name of the old job to resume
                                 old_job_name=previous_step['abaqus'].get_prefix()
                             ))
-    exit()
+
     sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
     sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
@@ -296,4 +300,16 @@ for x in range(0, number_of_steps):
 
     # Transfer from grid to Pace3D
     # Start Pace3D Simulation
+
     # Transfer Pace3d simulation results into Grid object
+    data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file(pace3d_file_next),
+                                               x_coord_row=4, y_coord_row=5, z_coord_row=6,
+                                               values_row={'pore_pressure': 3, 'local_x': 0, 'local_y': 1,
+                                                           'local_z': 2})
+    # Z-dimension in Pace3D is negative in Abaqus positive. Manipulate z-coordinates by multiplying by -1. Pore
+    # pressure is given in bar should be N/m²: multiply by 100000.
+    for row in data:
+        row['z_coordinate'] = row['z_coordinate'] * -1
+        row['values']['pore_pressure'] = row['values']['pore_pressure'] * 100000
+
+    actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
