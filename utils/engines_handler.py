@@ -27,7 +27,7 @@ class EnginesHandler:
 
         self.log = log.getLogger(f'{self.__class__.__name__}:{self.engine_name}')
 
-    def init_engine(self, parameter: dict = {}):
+    def init_engine(self, parameter: dict = None):
         """
         Initialize engine according to self.engine_name. Parameters needed to initialize any engine differ
         on the engine and need to be of type dictionary.
@@ -43,31 +43,34 @@ class EnginesHandler:
             self.log.error(f'Engine already initialized: {self.engine}')
             return False
 
+        if parameter is None:
+            parameter = {}
+
         if self.engine_name == 'abaqus':
             if 'input_file' in parameter:
                 engine = AbaqusEngine(parameter['input_file'])
             else:
-                self.log.error(f'Missing parameter "input_file" in parameters: {parameter}')
-                raise TypeError
+                raise TypeError(f'Missing parameter "input_file" in parameters: {parameter}')
 
         elif self.engine_name == 'pace3d':
             engine = Pace3dEngine()
 
         else:
-            self.log.error(f'Engine {self.engine_name} is unknown.')
-            raise TypeError
+            raise TypeError(f'Engine {self.engine_name} is unknown.')
 
         self.log.info(f'Engine {self.engine_name} successfully initialized')
         self.engine = engine
         return engine
 
-    def add_iteration_step(self, iteration_name, previous_copy=False):
+    def add_iteration_step(self, iteration_name, previous_copy=False, delete_previous_grid=False):
         """ Add an iteration step to this instance of the engine handler.
 
         Args:
             iteration_name: name of the iteration to be added
-            previous_copy (boolean): set true to make a (deep)copy of the previous step, keeping grid information
-                                     and values
+            previous_copy (boolean, optional): set true to make a (deep)copy of the previous step, keeping grid
+                                                information and values
+            delete_previous_grid (boolean, optional): set true to delete grid from previous iteration step to save
+                                                        memory
 
         Returns:
             IterationStep on success
@@ -76,14 +79,25 @@ class EnginesHandler:
         step_no = len(self.iterations)
         step_name_exists = False
 
+        # Check if the step name given by a input parameter is used for a previous step. The name must be unique. There
+        # fore a error is raised, when the name already exists.
         for iterations in self.iterations:
             if iterations.name == iteration_name:
                 step_name_exists = True
 
         if step_name_exists:
-            self.log.error(f'Step with the same name ({iteration_name}) already exists.')
-            raise KeyError
+            raise NameError(f'Step with the same name ({iteration_name}) already exists.')
+
         else:
+            # Delete grid of previous simulation. This step is only necessary to save systems memory. The grid of the
+            # actual step will be kept and only thegrid of the previous step will be deleted. Steps before the previous
+            # step are not affected.
+            if delete_previous_grid:
+                if len(self.iterations) > 1:
+                    self.iterations[len(self.iterations) - 2].grid = None
+
+            # If input parameter previous_copy is set a deepcopy of the previous step will be created and only the
+            # name and step_no will be changed.
             if previous_copy:
                 previous_iteration = self.iterations[len(self.iterations) - 1]
                 current_iteration = copy.deepcopy(previous_iteration)
@@ -96,7 +110,7 @@ class EnginesHandler:
 
                 self.log.debug(f'Added copy of previous iteration step "{previous_iteration_name}" with new '
                                f'name "{iteration_name}"')
-                return current_iteration  # self.iterations[step_no]
+                return current_iteration
             else:
                 self.iterations.append(IterationStep(iteration_name, step_no))
                 self.log.debug(f'Added new iteration step: {iteration_name}')
@@ -108,7 +122,10 @@ class EnginesHandler:
         Returns:
             IterationStep
         """
-        return self.iterations[len(self.iterations) - 1]
+        if len(self.iterations) > 0:
+            return self.iterations[len(self.iterations) - 1]
+        else:
+            return False
 
     def path_cleanup(self, path_name, recreate_missing=True):
         """
@@ -127,20 +144,16 @@ class EnginesHandler:
 
         # Check if path is file or folder
         if path.is_file():
-            self.log.error(f'Given path is a file. Expected path.')
-            raise TypeError
+            raise TypeError(f'Given path is a file. Expected path.')
 
         # Remove recursive and optionally recreate folder (see recreate_missing option)
         if path.is_dir():
-            shutil.rmtree(path) # Remove all files and sub folders recursively
-            # time.sleep(0.5)
+            shutil.rmtree(path)  # Remove all files and sub folders recursively
             path.mkdir()  # Create dir
             self.log.info(f'Cleaned up path {path}')
 
         # FIXME Recreate only betroffene folder
         if recreate_missing:
-            print('TEST:', path.parent)
-            print('TEST:', path.parents)
             # Check if all paths in self.path are exist, otherwise create.
             for name, path in self.paths.items():
                 if not path.is_dir():
@@ -204,8 +217,7 @@ class EnginesHandler:
                 return True
 
         except FileNotFoundError as err:
-            self.log.error(f'Error occured while setting path {path} as {path_name}. {err}')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Error occurred while setting path {path} as {path_name}. {err}')
 
     def get_path(self, path_name):
         """
@@ -221,8 +233,7 @@ class EnginesHandler:
             return self.paths[path_name]
 
         except KeyError as err:
-            self.log.error(f'Error occurred while reading path {path_name}. {err}')
-            raise KeyError
+            raise KeyError(f'Error occurred while reading path {path_name}. {err}')
 
     def set_file(self, file_name, file):
         """
@@ -238,20 +249,17 @@ class EnginesHandler:
         try:
             file = Path(file)
             if file.is_dir():
-                self.log.error(f'Given file is a path. Use .set_path() instead.')
-                raise IsADirectoryError
+                raise IsADirectoryError(f'Given file is a path. Use .set_path() instead.')
 
             if file.is_file():
                 self.files[file_name] = file
                 self.log.debug(f'Checked and added file {file_name} : {file}')
                 return True
             else:
-                self.log.error(f'File {file} not found.')
-                raise FileNotFoundError
+                raise FileNotFoundError(f'File {file} not found.')
 
         except FileNotFoundError as err:
-            self.log.error(f'Error occurred while setting file {file} as {file_name}. {err}')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Error occurred while setting file {file} as {file_name}. {err}')
 
     def get_file(self, file_name):
         """
@@ -267,5 +275,4 @@ class EnginesHandler:
             return self.files[file_name]
 
         except KeyError as err:
-            self.log.error(f'Error occured while reading file {file_name}. {err}')
-            raise KeyError
+            raise KeyError(f'Error occurred while reading file {file_name}. {err}')
