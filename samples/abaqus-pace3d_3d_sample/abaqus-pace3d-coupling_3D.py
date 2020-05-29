@@ -209,7 +209,7 @@ for x in range(0, number_of_steps):
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
 
-    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2, 200)
+    transformer.find_nearest_neighbors('pace3d', 'abaqus', 2, 230)
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
 
     actual_step['abaqus'].grid.z_rotation(angle=-rotation_angle, origin=origin)
@@ -234,8 +234,8 @@ for x in range(0, number_of_steps):
         step_time_increment_max = 172800
         pace3d_file_next = 'pore_pressure_02'
     elif x == 1:
-        step_time_total = 5961600
-        step_time_increment_max = 345600
+        step_time_total = 2592000
+        step_time_increment_max = 172800
         pace3d_file_next = 'pore_pressure_02'
 
     abaqus_handler.set_file(f'input_file_{step_name}',
@@ -305,7 +305,7 @@ for x in range(0, number_of_steps):
     transformer = GridTransformer()
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
-    transformer.find_nearest_neighbors('abaqus', 'pace3d', 2)
+    transformer.find_nearest_neighbors('abaqus', 'pace3d', 2, 230)
     transformer.transition('abaqus', 'porosity', 'pace3d')
     actual_step['abaqus'].grid.z_rotation(angle=-rotation_angle, origin=origin)
 
