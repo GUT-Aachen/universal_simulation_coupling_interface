@@ -103,7 +103,8 @@ class GridTransformer:
         if grid_name_2 not in self.grids:
             raise KeyError(f'Grid with name "{grid_name_2}" not found in {self.grids.keys()}')
 
-        self.log.debug(f'Start identifying nearest neighbors in {grid_name_1} for {grid_name_2}')
+        self.log.debug(f'Start identifying nearest neighbors in {grid_name_1} for {grid_name_2}: '
+                       f'neighbors={neighbors_quantity}; max distance={distance_max};')
 
         # Transform grids to arrays containing the coordinates to use KDTree
         grid_1_coordinates = self.grids[grid_name_1]['grid'].get_coordinates_array()
@@ -218,6 +219,9 @@ class GridTransformer:
                 result = factor / sum_distance
                 target_grid['grid'].nodes[node].set_value(value_name, result)
 
+            # Check if a value is set for all nodes
+            target_grid['grid'].check_value_set_completeness(value_name)
+
         self.log.info(f'Transition for {value_name} from {src_grid_name} to {target_grid_name} successful')
         return True
 
@@ -245,11 +249,14 @@ class GridTransformer:
 
             if node_list:
                 for node, node_dict in node_list.items():
-                    for item in node_dict:
-                        if item['distance'] > 0:
-                            distances.append(item['distance'])
-                        else:
-                            count_lonely_nodes += 1
+                    if node_dict:
+                        for item in node_dict:
+                            if item['distance'] > 0:
+                                distances.append(item['distance'])
+                            else:
+                                count_lonely_nodes += 1
+                    else:
+                        count_lonely_nodes += 1
             else:
                 count_lonely_nodes += 1
 
@@ -351,14 +358,16 @@ class GridTransformer:
             cb1 = ax1.scatter(list(src_grid_begin.get_node_values('x_coordinate').values()),
                               list(src_grid_begin.get_node_values('y_coordinate').values()),
                               list(src_grid_begin.get_node_values('z_coordinate').values()),
-                              s=1, c=data_begin, cmap=plt.cm.get_cmap('RdBu'))
+                              # s=1, c=data_begin, cmap=plt.cm.get_cmap('RdBu'))
+                              c=data_begin, cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb1, ax=ax1)
             ax1.set_title('input (original)')
             ax2 = mpl_fig.add_subplot(222)
             cb2 = ax2.scatter(list(target_grid.get_node_values('x_coordinate').values()),
                               list(target_grid.get_node_values('y_coordinate').values()),
                               list(target_grid.get_node_values('z_coordinate').values()),
-                              s=1, c=list(target_grid.get_node_values(value_name).values()),
+                              # s=1, c=list(target_grid.get_node_values(value_name).values()),
+                              c=list(target_grid.get_node_values(value_name).values()),
                               cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb2, ax=ax2)
             ax2.set_title('output')
@@ -367,7 +376,8 @@ class GridTransformer:
             cb3 = ax3.scatter(list(src_grid_end.get_node_values('x_coordinate').values()),
                               list(src_grid_end.get_node_values('y_coordinate').values()),
                               list(src_grid_end.get_node_values('z_coordinate').values()),
-                              s=1, c=data_end, cmap=plt.cm.get_cmap('RdBu'))
+                              # s=1, c=data_end, cmap=plt.cm.get_cmap('RdBu'))
+                              c=data_end, cmap=plt.cm.get_cmap('RdBu'))
             plt.colorbar(cb3, ax=ax3)
             ax3.set_title('input (retransformation)')
 
