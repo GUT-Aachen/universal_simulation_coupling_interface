@@ -1,7 +1,6 @@
 import logging
 import sys
 from pathlib import Path
-
 from utils.grid import Grid
 from utils.grid_transformer import GridTransformer
 from utils.simulation_handler import SimulationHandler
@@ -92,6 +91,15 @@ actual_step['abaqus'].create_step_folder(abaqus_handler.get_path('output'))
 # The initial grid/mesh will be read from the Abaqus input file and stored in a grid object in the actual step.
 actual_step['abaqus'].grid.initiate_grid(abaqus_handler.engine.get_nodes(abaqus_part_name))
 
+# Set rotation angle and origin point for later rotations/transformations
+rotation_angle = 0.586430449848147
+origin = actual_step['abaqus'].grid.get_coordinates_array()[0]
+origin = {'x_coordinate': origin[0], 'y_coordinate': origin[1]}
+# actual_step['abaqus'].grid.z_rotation(angle=tilt_angle, origin=origin)
+
+# data = actual_step['abaqus'].grid.get_list()
+# pace3d_handler.engine.write_csv_file(data, actual_step['abaqus'].get_path() / 'porosity.dat')
+
 # Store scratch path in Abaqus engine
 abaqus_handler.engine.paths['scratch'] = abaqus_handler.get_path('scratch')
 
@@ -141,14 +149,14 @@ sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_st
 abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
                         f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
 
-# Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
-# as grid values. Those can be used to generate randomly lowered pore pressure values.
-void_ratio_import = abaqus_handler.engine.read_csv_file(
-    abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
+# # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
+# # as grid values. Those can be used to generate randomly lowered pore pressure values.
+# void_ratio_import = abaqus_handler.engine.read_csv_file(
+#     abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
 
-# Initiate a new temporary grid for imported pore pressure
-pore_pressure_import_grid = Grid()
-pore_pressure_import_grid.initiate_grid(void_ratio_import, 'void_ratio')
+# # Initiate a new temporary grid for imported pore pressure
+# pore_pressure_import_grid = Grid()
+# pore_pressure_import_grid.initiate_grid(void_ratio_import, 'void_ratio')
 
 # This was just an initial step and no further actions are needed to be done with the outcome of this step.
 
@@ -195,12 +203,16 @@ for x in range(0, number_of_steps):
     actual_step['abaqus'].set_step_folder(abaqus_handler.get_path('output'))
     actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
 
+    actual_step['abaqus'].grid.z_rotation(angle=rotation_angle, origin=origin)
+
     transformer = GridTransformer()
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
 
     transformer.find_nearest_neighbors('pace3d', 'abaqus', 2, 200)
     transformer.transition('pace3d', 'pore_pressure', 'abaqus')
+
+    actual_step['abaqus'].grid.z_rotation(angle=-rotation_angle, origin=origin)
 
     abaqus_handler.engine.create_boundary_condition('PP',
                                                     actual_step['abaqus'].grid.get_node_values('pore_pressure'),
@@ -289,11 +301,13 @@ for x in range(0, number_of_steps):
     # PACE 3D STUFF
     # Prepare Transfer
     # Transfer Abaqus void ratio results into Pace3D Grid object
+    actual_step['abaqus'].grid.z_rotation(angle=rotation_angle, origin=origin)
     transformer = GridTransformer()
     transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
     transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
     transformer.find_nearest_neighbors('abaqus', 'pace3d', 2)
     transformer.transition('abaqus', 'porosity', 'pace3d')
+    actual_step['abaqus'].grid.z_rotation(angle=-rotation_angle, origin=origin)
 
     data = actual_step['pace3d'].grid.get_list()
     pace3d_handler.engine.write_csv_file(data, actual_step['abaqus'].get_path() / 'porosity.dat')
