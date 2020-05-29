@@ -1,4 +1,5 @@
 import logging as log
+import numpy
 from utils.node import Node
 
 
@@ -46,6 +47,25 @@ class Grid:
             break
 
         return str_output
+
+    def check_value_set_completeness(self, set_name):
+        """ Check if a value is stored for each node in the grid. Otherwise NaN will be stored in those nodes."""
+
+        self.log.debug(f'Check if values for {set_name} are set for any node in this grid.')
+
+        counter = 0
+
+        for node in self.nodes.values():
+            if not node.values[set_name]:
+                node.values[set_name] = numpy.nan
+                counter += 1
+
+        if not counter == 0:
+            self.log.debug(f'Check completed. Added NaN value for {counter} nodes.')
+        else:
+            self.log.debug(f'Check completed. Data valid.')
+
+        return True
 
     def get_empty_nodes(self):
         """ Getting a dictionary containing all nodes without values. This dict can be used to be filled with values
@@ -128,6 +148,8 @@ class Grid:
 
         for node_number, value in node_dict.items():
             self.nodes[node_number].set_value(value_name, value)
+
+        self.check_value_set_completeness(value_name)
 
         return True
 
@@ -229,6 +251,20 @@ class Grid:
             self.log.error(f'An error occurred while renaming values: {err}')
             return False
 
+    def z_rotation(self, angle=None, origin=None):
+        """Rotate grid by a given angle at a origin point.
+        Args:
+            angle: optional
+                sets the rotation angle
+            origin: optional
+                origin/fix point for rotation
+
+        Returns:
+            True on success
+        """
+        for node in self.nodes.values():
+            node.z_rotation(angle, origin)
+
     def initiate_grid(self, data_set, value_name=None, clear_first=True):
         """
         Initiate a new grid by transferring a dictionary including x/y/z-direction, values and optional node_number.
@@ -293,11 +329,12 @@ class Grid:
                     self.add_node(**input_dict)
 
             self.log.info(f'Added {len(data_set)} nodes to the grid.')
+
             return True
 
         except Exception as err:
             self.log.error(f'An error occurred while adding nodes to the grid. [{err}]')
-            return False
+            raise Exception
 
     def coordinates_exist(self, x_coordinate, y_coordinate, z_coordinate=None):
         """
@@ -343,7 +380,7 @@ class Grid:
                     return node_number
         return 0
 
-    def validation_check(self):
+    def grid_validation_check(self):
         """
         Checking the grid for any issues like:
             1. Using the same coordinates in two different nodes

@@ -44,19 +44,28 @@ class Node:
             return self.x_coordinate, self.y_coordinate, 0
 
     def z_rotation(self, angle=None, origin=None):
-        """Rotate the node by a given angle at a origin point"""
+        """Rotate the node by a given angle at a origin point
+        Args:
+            angle: optional
+                sets the rotation angle
+            origin: optional
+                origin/fix point for rotation
+
+        Returns:
+            True on success
+        """
 
         if not angle or not origin:
             raise ValueError(f'An rotation angle and an origin must be defined.')
 
-        x = self.x_coordinate - origin.x_coordinate
-        y = self.y_coordinate - origin.y_coordinate
+        x = self.x_coordinate - origin['x_coordinate']
+        y = self.y_coordinate - origin['y_coordinate']
 
         x_rotated = x * math.cos(angle) + y * math.sin(angle)
         y_rotated = x * -math.sin(angle) + y * math.cos(angle)
 
-        self.x_coordinate = x_rotated + origin.x_coordinate
-        self.y_coordinate = y_rotated + origin.y_coordinate
+        self.x_coordinate = x_rotated + origin['x_coordinate']
+        self.y_coordinate = y_rotated + origin['y_coordinate']
 
         return True
 
