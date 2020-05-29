@@ -38,34 +38,13 @@ class IterationStep:
     def get_path(self):
         return self.path
 
-    @property
-    def get_name(self):
-        return self.name
-
-    @property
     def get_grid(self):
         return self.grid
-
-    @property
-    def time(self):
-        return self.time
-
-    @property
-    def computing_time(self):
-        return self.computing_time
 
     def __str__(self):
         return f'name={self.name}; no={self.step_no}; grid-size={len(self.grid)} '
 
     __repr__ = __str__
-
-    @time.setter
-    def time(self, value):
-        self._time = value
-
-    @computing_time.setter
-    def computing_time(self, value):
-        self._computing_time = value
 
     def set_prefix(self, prefix: str):
         self.prefix = prefix
