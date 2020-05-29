@@ -62,7 +62,7 @@ class EnginesHandler:
         self.engine = engine
         return engine
 
-    def add_iteration_step(self, iteration_name, previous_copy=False, delete_previous_grid=False):
+    def add_iteration_step(self, iteration_name, previous_copy=False, delete_previous_grid=True):
         """ Add an iteration step to this instance of the engine handler.
 
         Args:
