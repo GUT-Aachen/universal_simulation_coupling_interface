@@ -219,8 +219,8 @@ class GridTransformer:
                 result = factor / sum_distance
                 target_grid['grid'].nodes[node].set_value(value_name, result)
 
-            # Check if a value is set for all nodes
-            target_grid['grid'].check_value_set_completeness(value_name)
+        # Check if a value is set for all nodes
+        target_grid['grid'].check_value_set_completeness(value_name)
 
         self.log.info(f'Transition for {value_name} from {src_grid_name} to {target_grid_name} successful')
         return True
