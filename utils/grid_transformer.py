@@ -3,7 +3,7 @@ from utils.grid import Grid
 from scipy.spatial import KDTree  # nearest neighbor search
 import numpy
 import matplotlib.pyplot as plt  # visualisation of transformation validation
-
+import sys
 
 class GridTransformer:
     """ Grid Transformer is used to transform in a Grid object saved values from one Grid object to another. At the
@@ -126,8 +126,38 @@ class GridTransformer:
         # Check for nearest neighbor
         self.log.debug(f'set initiate "grid_1_coordinates" as KDTree')
         tree = KDTree(numpy.float32(grid_1_coordinates))
-        self.log.debug(f'tree.query on KDTree(grid_1_coordinates) and grid_2_coordinates')
-        dist, points = tree.query(numpy.float32(grid_2_coordinates), neighbors_quantity, distance_max)
+
+        # Check whether a 32bit oder 64bit version of python is used. If a 32bit version is used, the maximum memory
+        # is limited to 4 gb which might be to low. In these cases, the nearest neighbor search will be split up
+        # in smaller arrays and merged after.
+
+        if sys.maxsize > 2 ** 32:
+            self.log.debug(f'tree.query on KDTree(grid_1_coordinates) and grid_2_coordinates')
+            dist, points = tree.query(numpy.float32(grid_2_coordinates), neighbors_quantity, distance_max)
+        else:
+            # Using a 32 bit version of python. Splitting up in
+            splits = 10
+            coordinates_split = numpy.array_split(numpy.float32(grid_2_coordinates), splits)
+
+            dist = []
+            points = []
+            i = 0
+
+            for arr in coordinates_split:
+                i += 1
+
+                self.log.debug(f'tree.query on KDTree(grid_1_coordinates) and grid_2_coordinates [{i}/{splits}]')
+                dist_tmp, points_tmp = tree.query(numpy.float32(arr),
+                                                  neighbors_quantity,
+                                                  distance_max)
+                # dist.append(dist_tmp)
+                # points.append(points_tmp)
+                if i == 1:
+                    points = points_tmp
+                    dist = dist_tmp
+                else:
+                    points = numpy.concatenate((points, points_tmp), axis=0)
+                    dist = numpy.concatenate((dist, dist_tmp), axis=0)
 
         transform_dict = {}
         count_lonely_nodes = 0
