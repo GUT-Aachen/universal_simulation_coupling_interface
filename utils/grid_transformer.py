@@ -131,7 +131,7 @@ class GridTransformer:
         # is limited to 4 gb which might be to low. In these cases, the nearest neighbor search will be split up
         # in smaller arrays and merged after.
 
-        if sys.maxsize > 2 ** 32:
+        if sys.maxsize > 2 ** 32 and 1 == 2:
             self.log.debug(f'tree.query on KDTree(grid_1_coordinates) and grid_2_coordinates')
             dist, points = tree.query(numpy.float32(grid_2_coordinates), neighbors_quantity, distance_max)
         else:
@@ -248,6 +248,8 @@ class GridTransformer:
 
                 result = factor / sum_distance
                 target_grid['grid'].nodes[node].set_value(value_name, result)
+            else:
+                target_grid['grid'].nodes[node].set_value(value_name, numpy.nan)
 
         # Check if a value is set for all nodes
         target_grid['grid'].check_value_set_completeness(value_name)
