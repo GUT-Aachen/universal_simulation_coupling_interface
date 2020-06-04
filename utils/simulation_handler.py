@@ -278,7 +278,7 @@ class SimulationHandler:
             return True
 
         except Exception:
-            raise Exception(f'An error occured while cleaning up output_path {path}')
+            raise Exception(f'An error occurred while cleaning up output_path {path}')
 
     def call_subprocess(self, batch_file, cwd_folder):
         """ Calling in the engines created batch files to run the simulations. The batch files will be ran in the
