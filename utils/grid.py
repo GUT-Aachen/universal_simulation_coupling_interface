@@ -56,10 +56,12 @@ class Grid:
         counter = 0
 
         for node in self.nodes.values():
-            if not node.values[set_name]:
+            try:
+                if not node.values[set_name]:
+                    node.values[set_name] = numpy.nan
+                    counter += 1
+            except Exception:
                 node.values[set_name] = numpy.nan
-                counter += 1
-
         if not counter == 0:
             self.log.debug(f'Check completed. Added NaN value for {counter} nodes.')
         else:
