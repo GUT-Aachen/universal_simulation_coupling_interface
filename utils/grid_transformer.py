@@ -5,6 +5,7 @@ import numpy
 import matplotlib.pyplot as plt  # visualisation of transformation validation
 import sys
 
+
 class GridTransformer:
     """ Grid Transformer is used to transform in a Grid object saved values from one Grid object to another. At the
         at the moment the two Grid objects need to have the same origin. Otherwise the data transformation will lead to
@@ -43,14 +44,21 @@ class GridTransformer:
         Returns:
             boolean: true on success
         """
+
+        if not isinstance(grid, Grid):
+            raise TypeError(f'Input parameter grid must be of type Grid, is {type(grid)}.')
+        if not isinstance(grid_name, str):
+            raise TypeError(f'Input parameter grid_name must be of type Grid, is {type(grid_name)}.')
+
         if grid_name in self.grids:
             raise KeyError(f'Grid with name {grid_name} already exists. Please use .update_grid() instead.')
-        else:
-            self.grids[grid_name] = {}
-            self.grids[grid_name]['transform'] = {}
-            self.grids[grid_name]['grid'] = grid
-            self.log.debug(f'Grid {grid_name} added')
-            return True
+
+        self.grids[grid_name] = {}
+        self.grids[grid_name]['transform'] = {}
+        self.grids[grid_name]['grid'] = grid
+
+        self.log.debug(f'Grid added successfully. ({grid_name})')
+        return True
 
     def update_grid(self, grid: Grid, grid_name: str):
         """
@@ -62,16 +70,21 @@ class GridTransformer:
         Returns:
             boolean: true on success
         """
+
+        if not isinstance(grid, Grid):
+            raise TypeError(f'Input parameter grid must be of type Grid, is {type(grid)}.')
+        if not isinstance(grid_name, str):
+            raise TypeError(f'Input parameter grid_name must be of type string, is {type(grid_name)}.')
+
         if grid_name not in self.grids:
             raise KeyError(f'Grid with name {grid_name} does not exists. Please use .add_grid() instead.')
 
-        else:
-            del self.grids['grid_name']
-            self.grids[grid_name] = {}
-            self.grids[grid_name]['transform'] = {}
-            self.grids[grid_name]['grid'] = grid
-            self.log.debug(f'Grid {grid_name} added')
-            return True
+        del self.grids['grid_name']
+        self.log.debug(f'Grid deleted for update. ({grid_name})')
+
+        self.add_grid(grid, grid_name)
+
+        return True
 
     def find_nearest_neighbors(self, grid_name_1: str, grid_name_2: str, neighbors_quantity: int = 10,
                                distance_max: float = numpy.inf):
@@ -95,6 +108,17 @@ class GridTransformer:
         Returns:
             boolean: true on success
         """
+
+        # Check input parameters
+        if not isinstance(grid_name_1, str):
+            raise TypeError(f'Input parameter grid_name_1 must be of type string, is {type(grid_name_1)}.')
+        if not isinstance(grid_name_2, str):
+            raise TypeError(f'Input parameter grid_name_2 must be of type string, is {type(grid_name_2)}.')
+        if not isinstance(neighbors_quantity, int):
+            raise TypeError(f'Input parameter neighbors_quantity must be of type integer, '
+                            f'is {type(neighbors_quantity)}.')
+        if not isinstance(distance_max, int) and not isinstance(distance_max, float) and distance_max != numpy.inf:
+            raise TypeError(f'Input parameter distance_max must be of type integer or float, is {type(distance_max)}.')
 
         # Check if grids exist
         if grid_name_1 not in self.grids:
@@ -206,12 +230,20 @@ class GridTransformer:
 
         Args:
             src_grid_name (str): Name of the source grid
-            value_name: Name of the values in source grid
+            value_name (str): Name of the values in source grid
             target_grid_name (str): Name of the target grid
 
         Returns:
             boolean: true on success
         """
+        # Check input parameters
+        if not isinstance(src_grid_name, str):
+            raise TypeError(f'Input parameter src_grid_name must be of type string, is {type(src_grid_name)}.')
+        if not isinstance(value_name, str):
+            raise TypeError(f'Input parameter value_name must be of type string, is {type(value_name)}.')
+        if not isinstance(target_grid_name, str):
+            raise TypeError(f'Input parameter target_grid_name must be of type string, is {type(target_grid_name)}.')
+
         # Check if grids exist
         if src_grid_name not in self.grids:
             raise KeyError(f'Grid with name "{src_grid_name}" not found in {self.grids.keys()}')
@@ -268,6 +300,10 @@ class GridTransformer:
         Returns:
             boolean: true on success
         """
+        # Check input parameters
+        if not isinstance(grid_name, str):
+            raise TypeError(f'Input parameter grid_name must be of type string, is {type(grid_name)}.')
+
         # Check if grids exist
         if grid_name not in self.grids:
             raise KeyError(f'Grid with name "{grid_name}" not found in {self.grids.keys()}')
@@ -324,6 +360,13 @@ class GridTransformer:
         Returns:
             None
         """
+        # Check input parameters
+        if not isinstance(src_grid_name, str):
+            raise TypeError(f'Input parameter src_grid_name must be of type string, is {type(src_grid_name)}.')
+        if not isinstance(value_name, str):
+            raise TypeError(f'Input parameter value_name must be of type string, is {type(value_name)}.')
+        if not isinstance(target_grid_name, str):
+            raise TypeError(f'Input parameter target_grid_name must be of type string, is {type(target_grid_name)}.')
 
         try:
             # Data transformation from input_mesh to output_mesh
