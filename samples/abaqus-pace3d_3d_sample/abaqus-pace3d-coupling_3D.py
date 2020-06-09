@@ -36,7 +36,7 @@ log = logging.getLogger('sample' + '.main')  # Define a logger for __main__ file
 # abaqus_initial_pore_pressure_value is the initial pore pressure for the part named in abaqus_part_name/
 # abaqus_assembly_name.
 simulation_name = 'AbaqusPace3dCoupling'
-number_of_steps = 4
+number_of_steps = 3
 abaqus_part_name = 'Reservoir-1-Crop'
 abaqus_assembly_name = 'Reservoir-1-Crop-1'
 abaqus_initial_pore_pressure_value = 57852940  # Constant pore pressure value in N/m²
@@ -184,6 +184,25 @@ for key, item in data_dict.items():
 
 actual_step['abaqus'].grid.set_node_values('porosity', data_dict)
 
+# #################################################################################
+# #################################################################################
+# Initialize Pace3D grid objects
+# Transfer Pace3d simulation results into Grid object
+data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('pore_pressure_01'),
+                                           x_coord_row=4, y_coord_row=5, z_coord_row=6,
+                                           values_row={'pore_pressure': 3, 'local_x': 0, 'local_y': 1,
+                                                       'local_z': 2})
+
+# Z-dimension in Pace3D is negative in Abaqus positive. Manipulate z-coordinates by multiplying by -1. Pore
+# pressure is given in bar should be N/m²: multiply by 100000.
+for row in data:
+    row['z_coordinate'] = row['z_coordinate'] * -1
+    row['values']['pore_pressure'] = row['values']['pore_pressure'] * 100000
+
+actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
+data = None
+
+# #################################################################################
 # #################################################################################
 # Next Iteration
 for x in range(0, number_of_steps):
