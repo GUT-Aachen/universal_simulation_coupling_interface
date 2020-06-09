@@ -19,13 +19,13 @@ class Node:
 
         # Check input parameters
         if not isinstance(node_number, int):
-            raise TypeError(f'Input parameter node_number must be of type integer.')
+            raise TypeError(f'Input parameter node_number must be of type integer is {type(node_number)}.')
         if not isinstance(x_coordinate, int) and not isinstance(x_coordinate, float):
-            raise TypeError(f'Input parameter x_coordinate must be of type float or integer.')
+            raise TypeError(f'Input parameter x_coordinate must be of type float or integer is {type(x_coordinate)}.')
         if not isinstance(y_coordinate, int) and not isinstance(y_coordinate, float):
-            raise TypeError(f'Input parameter y_coordinate must be of type float or integer.')
+            raise TypeError(f'Input parameter y_coordinate must be of type float or integer is {type(y_coordinate)}.')
         if not isinstance(z_coordinate, int) and not isinstance(z_coordinate, float) and z_coordinate is not None:
-            raise TypeError(f'Input parameter z_coordinate must be of type float, integer or left empty.')
+            raise TypeError(f'Input parameter z_coordinate must be of type float, integer or left empty is {type(z_coordinate)}.')
 
         self.node_number = node_number
         self.x_coordinate = x_coordinate
@@ -68,12 +68,12 @@ class Node:
 
         # Check input parameters
         if not isinstance(angle, int) and not isinstance(angle, float) and angle is not None:
-            raise TypeError(f'Input parameter angle must be of type float or integer.')
+            raise TypeError(f'Input parameter angle must be of type float or integer is {type(angle)}.')
         elif angle < 0 or angle > 360:
             raise ValueError(f'Input parameter angle must fulfull 0 < angle < 360.')
 
         if not isinstance(origin, dict) and origin is not None:
-            raise TypeError(f'Input parameter origin must be of type dict.')
+            raise TypeError(f'Input parameter origin must be of type dict is {type(origin)}.')
         else:
             # Check if keys for x and y coordinates are given
             x_coordinate_exists = False
