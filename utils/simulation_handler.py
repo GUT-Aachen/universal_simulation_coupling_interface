@@ -23,7 +23,7 @@ class SimulationHandler:
 
         # Check input parameters
         if not isinstance(name, str):
-            raise TypeError(f'Input parameter name must be of type string is {type(engine)}.')
+            raise TypeError(f'Input parameter name must be of type string is {type(name)}.')
         self.name = name
 
         self.engines = {}
@@ -139,7 +139,7 @@ class SimulationHandler:
 
         # Check input parameters
         if not isinstance(engine_name, str):
-            raise TypeError(f'Input parameter engine_name must be of type string is {type(engine)}.')
+            raise TypeError(f'Input parameter engine_name must be of type string is {type(engine_name)}.')
         elif len(self.engines) > 0:  # Check if this engine name is already in use
             for key in self.engines.keys():
                 if key == engine_name:
@@ -173,7 +173,7 @@ class SimulationHandler:
 
         # Check input parameters
         if not isinstance(path_name, str):
-            raise TypeError(f'Input parameter path_name must be of type string is {type(engine)}.')
+            raise TypeError(f'Input parameter path_name must be of type string is {type(path_name)}.')
 
         # Check if path_name is valid
         valid_names = ['output', 'input', 'root']
@@ -287,7 +287,7 @@ class SimulationHandler:
 
         # Check input parameters
         if not isinstance(recreate_missing, bool):
-            raise TypeError(f'Input parameter recreate_missing must be of type bool.')
+            raise TypeError(f'Input parameter recreate_missing must be of type bool is {type(recreate_missing)}.')
 
         path = self.paths['output']
 
@@ -325,9 +325,9 @@ class SimulationHandler:
 
         # Check input parameters
         if not isinstance(batch_file, str) and not isinstance(batch_file, Path):
-            raise TypeError(f'Input parameter batch_file must be of type string or Path is {type(engine)}.')
+            raise TypeError(f'Input parameter batch_file must be of type string or Path is {type(batch_file)}.')
         if not isinstance(cwd_folder, str) and not isinstance(cwd_folder, Path):
-            raise TypeError(f'Input parameter cwd_folder must be of type string or Path is {type(engine)}.')
+            raise TypeError(f'Input parameter cwd_folder must be of type string or Path is {type(cwd_folder)}.')
 
         batch_file = Path(batch_file)
         folder = Path(cwd_folder)
