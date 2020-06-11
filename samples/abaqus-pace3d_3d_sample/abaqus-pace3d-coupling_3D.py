@@ -255,7 +255,7 @@ for x in range(0, number_of_steps):
     # #################################################################################
     # SIMULIA ABAQUS STUFF
     # Preparing simulation iteration
-    actual_step['abaqus'].set_step_folder(abaqus_handler.get_path('output'))
+    actual_step['abaqus'].create_step_folder(abaqus_handler.get_path('output'))
     actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
 
     transformer = GridTransformer()
