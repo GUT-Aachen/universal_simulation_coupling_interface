@@ -237,10 +237,8 @@ class AbaqusEngine:
         """
         self.log.info(f'Copying files from previous iteration "{prev_job_folder}" to current iterations output '
                       f'folder "{current_job_folder}".')
-        if not Path(current_job_folder).is_dir():
-            shutil.copytree(prev_job_folder, current_job_folder)
-        else:
-            self.log.error(f'{current_job_folder} already exists')
+        shutil.copytree(prev_job_folder, current_job_folder, dirs_exist_ok=True)
+
         return True
 
     def clean_previous_files(self, step_name, current_job_folder):
