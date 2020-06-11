@@ -19,7 +19,6 @@ class EnginesHandler:
     coupler only one instance of the EngineHandler class is needed.
     """
     def __init__(self, engine):
-        self.log = log.getLogger(f'{self.__class__.__name__}:{self.engine_name}')
 
         # Check input parameters
         if not isinstance(engine, str):
@@ -30,6 +29,8 @@ class EnginesHandler:
         self.iterations = []
         self.paths = {}
         self.files = {}
+
+        self.log = log.getLogger(f'{self.__class__.__name__}:{self.engine_name}')
 
     def init_engine(self, parameter: dict = None):
         """
@@ -327,4 +328,4 @@ class EnginesHandler:
             if not file_name_exists:
                 raise KeyError(f'Path name does not exist. ({file_name})')
 
-        return self.paths[file_name]
+        return self.files[file_name]
