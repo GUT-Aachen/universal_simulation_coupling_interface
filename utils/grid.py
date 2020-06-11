@@ -4,7 +4,13 @@ from utils.node import Node
 
 
 class Grid:
-    """This class represents a grid of nodes"""
+    """This class represents a grid of nodes, containing Node objects.
+
+    Conditions:
+        - A node exists just once regarding its coordinates and node number.
+        - A value must be stored in each single node. If a value is not available for a specific node it must be
+            set to None.
+    """
     def __init__(self):
         self.log = log.getLogger(self.__class__.__name__)
         self.nodes = {}
@@ -13,21 +19,43 @@ class Grid:
         return len(self.nodes)
 
     def __contains__(self, node_number):
-        if isinstance(node_number, int):
-            if node_number in self.nodes:
-                return True
-            else:
-                return False
+        """ Check if the grid contains a specific node, catched by node number.
+
+            Args:
+            node_number (int): Node number to be checked
+
+            Returns:
+                True if the node exists
+                False is the node does not exist
+        """
+
+        # Check input parameters
+        if not isinstance(node_number, int):
+            raise TypeError(f'Input parameter node_number must be of type integer, is {type(node_number)}.')
+
+        if node_number in self.nodes:
+            return True
         else:
-            self.log.error(f'Integer expected got {node_number}')
             return False
 
     def __getitem__(self, node_number):
-        try:
+        """ Get a Node object from Grid identified by its node number.
+
+        Args:
+            node_number (int): Node number to be checked
+
+        Returns:
+            Node object
+        """
+
+        # Check input parameters
+        if not isinstance(node_number, int):
+            raise TypeError(f'Input parameter node_number must be of type integer, is {type(node_number)}.')
+
+        if self.__contains__(node_number):
             return self.nodes[node_number]
-        except KeyError as err:
-            self.log.error(f'get_node() {err}')
-            return 0
+        else:
+            raise KeyError(f'The requested node does not exist. (node:{node_number})')
 
     def __str__(self):
         return f'{self.__class__.__name__}: number of nodes={len(self)}'
@@ -37,7 +65,7 @@ class Grid:
         Returns a list of available names for values in grid instance.
 
         Returns:
-            list: available value_names in grid
+            list: available value_names in Grid
         """
         str_output = []
 
@@ -88,7 +116,7 @@ class Grid:
                 return False
 
         except Exception as err:
-            log.error(f'An error occured while reading values: {err}')
+            log.error(f'An error occurred while reading values: {err}')
             return 0
 
         except KeyError as err:
