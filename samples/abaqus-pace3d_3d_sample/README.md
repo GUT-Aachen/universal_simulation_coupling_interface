@@ -101,6 +101,6 @@ Here you can see a summary of the four iteration steps and the changing pore pre
  13. Run initial iterarion step of Pace3D simulation
  14. Iterate through following steps: 
  15. General: set step name; add step to Simulation Handler object; 
- 17. Pace3D: read void ratio from previous Pace3D step, transform and store for new step; do some stoff; run simulation step; read and store pore pressure into Pace3D engine's Grid object;
- 16. Abaqus: read pore pressure from previous Pace3D step, transform and store for new step; create boundary conditions for input file; create Abaqus input file; create bash file; run simulation step; read and store void ratio into Abaqus engine's Grid object;
+ 17. Pace3D: read porosity from previous Abaqus step, transform and store for new step; do some stuff; run simulation step; read and store pore pressure into Pace3D engine's Grid object;
+ 16. Abaqus: read pore pressure from current Pace3D step, transform and store for new step; create boundary conditions for input file; create Abaqus input file; create bash file; run simulation step; read and store void ratio into Abaqus engine's Grid object; transform void ratio to porosity and store in Abaqus engine's Grid object;
  
