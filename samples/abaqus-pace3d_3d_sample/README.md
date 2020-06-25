@@ -44,7 +44,7 @@ For each node the rotated and shifted coordinates are saved as values (``local_x
 
 Here ends the initial iteration step.
 
-The upcoming steps (in this case only one) are establishes as follows:
+The upcoming steps are established as follows:
 1. General stuff
 2. Pace3d engine
 3. Simulia Abaqus engine
