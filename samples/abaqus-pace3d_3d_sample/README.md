@@ -77,8 +77,8 @@ From Abaqus exported void ratio distribution is imported and stored in Abaqus en
 ## Results
 
 Here you can see a summary of the four iteration steps and the changing pore pressure and void ratio.
-![SimulationResults](results_pp.gif "Simulation results: pore pressure changes due to modified boundary conditions (input from Pace3D into Abaqus)")
-![SimulationResults](results_vr.gif "Simulation results: void ratio changes due to changed pore pressure")
+![SimulationResults](result_pp.gif "Simulation results: pore pressure changes due to modified boundary conditions (input from Pace3D into Abaqus)")
+![SimulationResults](result_vr.gif "Simulation results: void ratio changes due to changed pore pressure")
 
 ---
 
