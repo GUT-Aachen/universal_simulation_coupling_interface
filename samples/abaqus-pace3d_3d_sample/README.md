@@ -84,23 +84,16 @@ Here you can see a summary of the four iteration steps and the changing pore pre
 
 ## Workflow
 
-![SimulationWorkflow](workflow.png "Flowchart showing the simulations workflow")
+The coupled simulation cna be split up into three parts:
 
- 1. Set root path
- 2. Start logging
- 3. Set simulation's name
- 4. Initialize SimulationHandler object
- 5. Add Engine Handler object to SimulationHandler object that cares about Abaqus engine.
- 6. Add Engine Handler object to SimulationHandler object that cares about Pace3D engine.
- 7. Set paths and files to Abaqus engine
- 8. Set paths and files to Pace3D engine
- 9. Set number of steps
- 10. Set name of part to be modified in Abaqus engine
- 11. Prepare first step: set step name; add step to Simulation Handler object; copy grid from Abaqus input file into Grid object; import initial Pace3D pore pressure distribution into Grid object and transform to Abaqus Grid object; create initial boundary conditions for pore pressure in Abaqus with distribution store in Abaqus Grid object; create input file; create bash file;
- 12. Run initial iteration step of Abaqus simulation
- 13. Run initial iterarion step of Pace3D simulation
- 14. Iterate through following steps: 
- 15. General: set step name; add step to Simulation Handler object; 
- 17. Pace3D: read porosity from previous Abaqus step, transform and store for new step; do some stuff; run simulation step; read and store pore pressure into Pace3D engine's Grid object;
- 16. Abaqus: read pore pressure from current Pace3D step, transform and store for new step; create boundary conditions for input file; create Abaqus input file; create bash file; run simulation step; read and store void ratio into Abaqus engine's Grid object; transform void ratio to porosity and store in Abaqus engine's Grid object;
+ 1. Pre configuration to initialize engines
+ 2. Run an initial simulation with both engines
+ 3. Run a couple of following iterations
+ 
+ A detailed Explanation of each part can be found in the following charts.
+
+![SimulationWorkflowSetup](fig_setup.png "Flowchart showing the simulations workflow - setup")
+![SimulationWorkflowInitialStep](fig_initial.png "Flowchart showing the simulations workflow - initial step")
+![SimulationWorkflowFollowingSteps](fig_iteration.png "Flowchart showing the simulations workflow - following iteration steps")
+
  
