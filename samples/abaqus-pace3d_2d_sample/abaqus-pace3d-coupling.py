@@ -85,6 +85,7 @@ number_of_steps = 1
 # multiple parts can be chosen and coupled. The name must be the same as shown in the Abaqus input file
 # in the input folder (abaqus_pseudo_coupling.inp, see line 16).
 abaqus_part_name = 'Part-1'
+# #################################################################################
 
 # Log environmental variables to make the log traceable
 log.debug(f'root_directory: {sim.get_root_path()}')
@@ -124,14 +125,21 @@ abaqus_handler.engine.create_node_set_all_list('PP', abaqus_part_name)
 
 # Set initial pore pressure distribution imported from an data file from Pace3D.
 log.debug(f'Setting initial pore pressure distribution by pace3d distribution data.')
-data = pace3d_handler.engine.read_csv_file(pace3d_handler.get_file('initial_pore_pressure'))
+data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('initial_pore_pressure'),
+                                           x_coord_row=0, y_coord_row=1, z_coord_row=2,
+                                           values_row={'pore_pressure': 3})
+
+# Pace3D z coordinate in 2d is always 1.0 instead of 0. Setting z coordinate to 0 instead.
+for row in data:
+    row['z_coordinate'] = 0
+
 actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
 
 # Transform data from Pace3D grid to Simulia Abaqus Mesh
 transformer = GridTransformer()
 transformer.add_grid(actual_step['abaqus'].grid, 'abaqus')
 transformer.add_grid(actual_step['pace3d'].grid, 'pace3d')
-transformer.find_nearest_neighbors('pace3d', 'abaqus', 4)
+transformer.find_nearest_neighbors('pace3d', 'abaqus', 2)
 transformer.transition('pace3d', 'pore_pressure', 'abaqus')
 
 # Finally create boundary condition to be added into a Abaqus step in the input file
@@ -196,7 +204,14 @@ transformer.transition('abaqus', 'void_ratio', 'pace3d')
 # Start Pace3D Simulation
 
 # Transfer Pace3d simulation results into Grid object
-data = pace3d_handler.engine.read_csv_file(pace3d_handler.get_file('pore_pressure'))
+data = pace3d_handler.engine.read_csv_file(file=pace3d_handler.get_file('pore_pressure'),
+                                           x_coord_row=0, y_coord_row=1, z_coord_row=2,
+                                           values_row={'pore_pressure': 3})
+
+# Pace3D z coordinate in 2d is always 1.0 instead of 0. Setting z coordinate to 0 instead.
+for row in data:
+    row['z_coordinate'] = 0
+
 actual_step['pace3d'].grid.initiate_grid(data, 'pore_pressure')
 
 # #################################################################################
