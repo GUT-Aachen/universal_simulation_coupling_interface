@@ -171,9 +171,9 @@ class GridTransformer:
                 i += 1
 
                 self.log.debug(f'tree.query on KDTree(grid_1_coordinates) and grid_2_coordinates [{i}/{splits}]')
-                dist_tmp, points_tmp = tree.query(numpy.float32(arr),
-                                                  neighbors_quantity,
-                                                  distance_max)
+                dist_tmp, points_tmp = tree.query(x=numpy.float32(arr),
+                                                  k=neighbors_quantity,
+                                                  distance_upper_bound=distance_max)
                 # dist.append(dist_tmp)
                 # points.append(points_tmp)
                 if i == 1:
@@ -194,9 +194,22 @@ class GridTransformer:
             transform_dict[grid_2_nodes[i]] = []
 
             # Loop through all neighbors and check distance
-            for k in range(len(dist[i])):  # FIXME problems when only 1 neighbor is used, because no list in dist
-                node = grid_1_nodes[points[i][k]-1]
-                distance = dist[i][k]
+            # Distinguish between only one neighbor and a couple of neighbors.
+            if not len(dist.shape) == 1:  # Only one neighbor has been taken into account
+                for k in range(len(dist[i])):
+                    node = grid_1_nodes[points[i][k]-1]
+                    distance = dist[i][k]
+
+                    # Easily just continue when the maximum distance is exceeded
+                    if distance_max != numpy.inf:
+                        if distance > distance_max:
+                            continue
+
+                    # Append node and distance to list in dictionaryDiferantiate
+                    transform_dict[grid_2_nodes[i]].append({'node_number': node, 'distance': distance})
+            else:  # A couple of neighbors have been taken into account
+                node = grid_1_nodes[points[i] - 1]
+                distance = dist[i]
 
                 # Easily just continue when the maximum distance is exceeded
                 if distance_max != numpy.inf:
@@ -269,16 +282,26 @@ class GridTransformer:
 
             if node_dict:
                 # Calculating of the weighted average
+                # Take into account if a value has the distance of 0. In this case this particular value should be
+                # used instead of creating a weighted average.
                 for item in node_dict:
                     distance = item['distance']
                     node_number = item['node_number']
-
-                    sum_distance += 1 / distance
                     value = src_values[node_number]
 
-                    factor += value * 1 / distance
+                    # Check if the actual node has distance of 0. If so set value as final result and stop looping.
+                    # sum_distance will be set to zero to show, that a perfect fitting node has been found.
+                    if distance == 0:
+                        result = value
+                        sum_distance = 0
+                        break
+                    else:
+                        sum_distance += 1 / distance
+                        factor += value * 1 / distance
 
-                result = factor / sum_distance
+                if not sum_distance == 0:
+                    result = factor / sum_distance
+
                 target_grid['grid'].nodes[node].set_value(value_name, result)
             else:
                 target_grid['grid'].nodes[node].set_value(value_name, numpy.nan)
