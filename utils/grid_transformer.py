@@ -136,16 +136,40 @@ class GridTransformer:
         grid_2_coordinates = self.grids[grid_name_2]['grid'].get_coordinates_array()
         grid_2_nodes = list(self.grids[grid_name_2]['grid'].nodes.keys())
 
-        # TODO Check if coordinates in x/y/z direction of grid_1 are in range auf grid_2
+        x_min_1 = min(grid_1_coordinates)[0]
+        y_min_1 = min(grid_1_coordinates)[1]
+        z_min_1 = min(grid_1_coordinates)[2]
+        x_max_1 = max(grid_1_coordinates)[0]
+        y_max_1 = max(grid_1_coordinates)[1]
+        z_max_1 = max(grid_1_coordinates)[2]
+
+        x_min_2 = min(grid_2_coordinates)[0]
+        y_min_2 = min(grid_2_coordinates)[1]
+        z_min_2 = min(grid_2_coordinates)[2]
+        x_max_2 = max(grid_2_coordinates)[0]
+        y_max_2 = max(grid_2_coordinates)[1]
+        z_max_2 = max(grid_2_coordinates)[2]
+
         self.log.debug(f'Dimensions of {grid_name_1}:')
-        self.log.debug(f'\t (x): {min(grid_1_coordinates)[0]} to {max(grid_1_coordinates)[0]}')
-        self.log.debug(f'\t (y): {min(grid_1_coordinates)[1]} to {max(grid_1_coordinates)[1]}')
-        self.log.debug(f'\t (z): {min(grid_1_coordinates)[2]} to {max(grid_1_coordinates)[2]}')
+        self.log.debug(f'\t (x): {x_min_1} to {x_max_1}')
+        self.log.debug(f'\t (y): {y_min_1} to {y_max_1}')
+        self.log.debug(f'\t (z): {z_min_1} to {z_max_1}')
 
         self.log.debug(f'Dimensions of {grid_name_2}:')
-        self.log.debug(f'\t (x): {min(grid_2_coordinates)[0]} to {max(grid_2_coordinates)[0]}')
-        self.log.debug(f'\t (y): {min(grid_2_coordinates)[1]} to {max(grid_2_coordinates)[1]}')
-        self.log.debug(f'\t (z): {min(grid_2_coordinates)[2]} to {max(grid_2_coordinates)[2]}')
+        self.log.debug(f'\t (x): {x_min_2} to {x_max_2}')
+        self.log.debug(f'\t (y): {y_min_2} to {y_max_2}')
+        self.log.debug(f'\t (z): {z_min_2} to {z_max_2}')
+
+        # Check if grids are overlapping. If not throw an error as unpredictable errors may occur.
+        if not (x_min_1 <= x_max_2 and x_max_1 >= x_min_2):
+            self.log.error("Given grids are not overlapping in x direction. This may lead to unpredictable results.")
+            raise ValueError("Given grids are not overlapping in x direction. This may lead to unpredictable results.")
+        if not (y_min_1 <= y_max_2 and y_max_1 >= y_min_2):
+            self.log.error("Given grids are not overlapping in y direction. This may lead to unpredictable results.")
+            raise ValueError("Given grids are not overlapping in y direction. This may lead to unpredictable results.")
+        if not (z_min_1 <= z_max_2 and z_max_1 >= z_min_2):
+            self.log.error("Given grids are not overlapping in z direction. This may lead to unpredictable results.")
+            raise ValueError("Given grids are not overlapping in z direction. This may lead to unpredictable results.")
 
         # Check for nearest neighbor
         self.log.debug(f'set initiate "grid_1_coordinates" as KDTree')
@@ -299,6 +323,7 @@ class GridTransformer:
                         sum_distance += 1 / distance
                         factor += value * 1 / distance
 
+                # sum_distance is 0 when a perfect match has been found for the specific node
                 if not sum_distance == 0:
                     result = factor / sum_distance
 
