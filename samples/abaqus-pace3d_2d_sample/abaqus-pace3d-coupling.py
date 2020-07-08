@@ -149,9 +149,9 @@ abaqus_handler.engine.create_boundary_condition('PP', actual_step['abaqus'].grid
 # Prefix for output files consists of simulation name and current step name
 actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
 abaqus_handler.set_file(f'input_file_{step_name}',
-                        abaqus_handler.engine.write_input_file('PP',
-                                                               actual_step['abaqus'].get_prefix(),
-                                                               actual_step['abaqus'].get_path()))
+                        abaqus_handler.engine.write_input_file(set_work_name='PP',
+                                                               job_name=actual_step['abaqus'].get_prefix(),
+                                                               path=actual_step['abaqus'].get_path()))
 
 # In the bash file a couple of parameters can be set to run the simulation.
 abaqus_handler.set_file(f'bash_file_{step_name}',
@@ -177,7 +177,9 @@ abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqu
 # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
 # as grid values. Those can be used to generate randomly lowered pore pressure values.
 void_ratio_import = abaqus_handler.engine.read_csv_file(
-    abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
+    file=abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'),
+    x_coord_row=0, y_coord_row=1, z_coord_row=2,
+    values_row={'void_ratio': 3})
 
 # Initiate a new temporary grid for imported pore pressure
 pore_pressure_import_grid = Grid()
@@ -227,7 +229,7 @@ for x in range(0, number_of_steps):
     # #################################################################################
     # SIMULIA ABAQUS STUFF
     # Preparing simulation iteration
-    actual_step['abaqus'].set_step_folder(abaqus_handler.get_path('output'))
+    actual_step['abaqus'].create_step_folder(abaqus_handler.get_path('output'))
     actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
 
     transformer = GridTransformer()
@@ -249,16 +251,19 @@ for x in range(0, number_of_steps):
 
     # Prepare input and batch file
     abaqus_handler.set_file(f'input_file_{step_name}',
-                            abaqus_handler.engine.write_input_file_restart('PP',
-                                                                           actual_step['abaqus'].get_prefix(),
-                                                                           actual_step['abaqus'].get_path(),
-                                                                           abaqus_handler.get_file(f'input_file_'
-                                                                                                   f'{previous_step["abaqus"].name}'),
-                                                                           actual_step['abaqus'].name,
-                                                                           previous_step["abaqus"].step_no + 1,
-                                                                           # Set to False if each sim should
-                                                                           # start at the very beginning
-                                                                           True))
+                            abaqus_handler.engine.write_input_file_restart(
+                               set_work_name='PP',
+                               job_name=actual_step['abaqus'].get_prefix(),
+                               path=actual_step['abaqus'].get_path(),
+                               previous_input_file=abaqus_handler.get_file(f'input_file_'
+                                                       f'{previous_step["abaqus"].name}'),
+                               step_name=actual_step['abaqus'].name,
+                               restart_step=previous_step["abaqus"].step_no + 1,
+                               step_time_total=86400,
+                               step_time_increment_max=86400,
+                               # Set to False if each sim should
+                               # start at the very beginning
+                               resume=True))
 
     abaqus_handler.set_file(f'bash_file_{step_name}',
                             abaqus_handler.engine.write_bash_file(
@@ -284,7 +289,9 @@ for x in range(0, number_of_steps):
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
     void_ratio_import = abaqus_handler.engine.read_csv_file(
-        abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
+        file=abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'),
+        x_coord_row=0, y_coord_row=1, z_coord_row=2,
+        values_row={'void_ratio': 3})
 
     # Initiate a new temporary grid for imported pore pressure
     pore_pressure_import_grid = Grid()
