@@ -664,25 +664,38 @@ class AbaqusEngine:
         else:
             self.log.error('Using unknown system. No batch file builder available.')
 
-    def read_csv_file(self, file: str, delimiter: str = ','):
-        """ Function to read an csv-file-export from the Software Simulia Abaqus
+    def read_csv_file(self, file: str, delimiter: str = ',',
+                      x_coord_row: int = 0, y_coord_row: int = 1, z_coord_row: int = 2,
+                      values_row: dict = {'data': 3}):
+        """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
-         Parameters:
-            file (str): filename including path
-            delimiter (str), optional: delimiter used in ascii file
+                 Parameters:
+                    file (str): filename including path
+                    delimiter (str), optional: delimiter used in ascii file
+                    x_coord_row (int), optional: row number for x-coordinate (default: 0)
+                    y_coord_row (int), optional: row number for y-coordinate (default: 1)
+                    z_coord_row (int), optional: row number for z-coordinate (default: 2)
+                    values_row (int), optional:  dictionary containing data set name and row number for values
+                                                (default: data:3)
 
-        Returns:
-            ndarray(dict)
-        """
+                Returns:
+                    ndarray(dict)
+                """
+
+        if not isinstance(values_row, dict):
+            self.log.error(f'Optional parameter values_row expects dictionary, is {type(values_row)}.')
+            return False
 
         try:
             file = Path(file)
+
+            # TODO Check if row fits to given data
 
             if not file.is_file():
                 self.log.error(f'File {file} not found.')
                 raise FileNotFoundError
 
-            self.log.info(f'Load Abaqus-Mesh-File: {file}')
+            self.log.info(f'Load Pace3D-Mesh-File: {file}')
 
             with file.open('r') as csv_file:
                 read_csv = csv.reader(csv_file, delimiter=delimiter)
@@ -691,14 +704,37 @@ class AbaqusEngine:
 
                 for row in read_csv:
                     try:
-                        if len(row) == 4:
-                            lines.append({'x_coordinate': float(row[0]),
-                                          'y_coordinate': float(row[1]),
-                                          'z_coordinate': float(row[2]),
-                                          'value': float(row[3])})
+                        # Check if actual row has the needed length
+                        if len(row) >= max(x_coord_row, y_coord_row, z_coord_row, max(values_row.values())) + 1:
+                            if z_coord_row != -1:
+                                x_coord = float(row[x_coord_row])
+                                y_coord = float(row[y_coord_row])
+                                z_coord = float(row[z_coord_row])
+                                values = {}
 
-                        if len(row) != 4:
-                            self.log.info(f'Empty row found or transition failed. Continue...')
+                                for key, item in values_row.items():
+                                    values[key] = float(row[item])
+
+                                lines.append({'x_coordinate': x_coord,
+                                              'y_coordinate': y_coord,
+                                              'z_coordinate': z_coord,
+                                              'values': values
+                                              })
+
+                            else:
+                                x_coord = float(row[x_coord_row])
+                                y_coord = float(row[y_coord_row])
+                                values = {}
+
+                                for key, item in values_row.items():
+                                    values[key] = float(row[item])
+
+                                lines.append({'x_coordinate': x_coord,
+                                              'y_coordinate': y_coord,
+                                              'values': values
+                                              })
+                        else:
+                            self.log.info(f'Empty or to short row found. Continue... [{row.__str__()}]')
 
                     except Exception as err:
                         self.log.info(f'Empty row found or transition failed. Continue... [{err}]')
