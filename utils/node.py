@@ -125,7 +125,7 @@ class Node:
                 return self.values[value_name]
         except KeyError as err:
             self.log.error(f'get_value() {err}')
-            return False
+            raise KeyError(f'get_value() {err}')
 
     def set_value(self, value_name, value):
         """
