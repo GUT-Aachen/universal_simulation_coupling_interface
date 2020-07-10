@@ -151,7 +151,7 @@ abaqus_handler.set_file(f'bash_file_{step_name}',
 # Start the simulation by calling a sub process
 sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
-abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
+abaqus_handler.set_file(f'output_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
                         f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')
 
 # Next iteration steps
@@ -167,10 +167,10 @@ for x in range(0, number_of_steps):
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
     pore_pressure_import = abaqus_handler.engine.read_csv_file(
-        abaqus_handler.get_file(f'ouput_file_{previous_step["abaqus"].name}_pore-pressure'))
+        abaqus_handler.get_file(f'output_file_{previous_step["abaqus"].name}_pore-pressure'))
 
     pore_pressure_import = abaqus_handler.engine.read_csv_file(
-        file=abaqus_handler.get_file(f'ouput_file_{previous_step["abaqus"].name}_pore-pressure'),
+        file=abaqus_handler.get_file(f'output_file_{previous_step["abaqus"].name}_pore-pressure'),
         x_coord_row=0, y_coord_row=1, z_coord_row=2,
         values_row={'pore_pressure': 3})
 
@@ -246,5 +246,5 @@ for x in range(0, number_of_steps):
         previous_step['abaqus'].name,  # Name of previous step
         actual_step['abaqus'].path)  # Path to the actual output folder
 
-    abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
+    abaqus_handler.set_file(f'output_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
                             f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')
