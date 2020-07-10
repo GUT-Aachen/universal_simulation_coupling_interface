@@ -179,8 +179,9 @@ for x in range(0, number_of_steps):
                             abaqus_handler.engine.write_input_file_restart('PP',
                                                                            actual_step['abaqus'].get_prefix(),
                                                                            actual_step['abaqus'].get_path(),
-                                                                           abaqus_handler.get_file(f'input_file_'
-                                                                                                   f'{previous_step["abaqus"].name}'),
+                                                                           abaqus_handler.get_file(
+                                                                               f'input_file_'
+                                                                               f'{previous_step["abaqus"].name}'),
                                                                            actual_step['abaqus'].name,
                                                                            previous_step["abaqus"].step_no + 1,
                                                                            # Set to False if each sim should
