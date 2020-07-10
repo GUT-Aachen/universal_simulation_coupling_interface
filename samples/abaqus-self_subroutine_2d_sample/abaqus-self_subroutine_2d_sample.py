@@ -21,6 +21,7 @@ root_directory = Path(Path().cwd())
 # Logfile name will be saved in 'root_directory'
 log_file_name = root_directory / 'logfile.log'
 
+# noinspection SpellCheckingInspection
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M',
@@ -166,9 +167,6 @@ for x in range(0, number_of_steps):
 
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
-    pore_pressure_import = abaqus_handler.engine.read_csv_file(
-        abaqus_handler.get_file(f'output_file_{previous_step["abaqus"].name}_pore-pressure'))
-
     pore_pressure_import = abaqus_handler.engine.read_csv_file(
         file=abaqus_handler.get_file(f'output_file_{previous_step["abaqus"].name}_pore-pressure'),
         x_coord_row=0, y_coord_row=1, z_coord_row=2,
