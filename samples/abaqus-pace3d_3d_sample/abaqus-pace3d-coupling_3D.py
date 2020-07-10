@@ -158,13 +158,13 @@ sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_st
 # Postprocessing Abaqus simulation
 # This was just an initial step and no further actions are needed to be done with the outcome of this step.
 
-abaqus_handler.set_file(f'ouput_file_initial_void-ratio', actual_step['abaqus'].get_path() /
+abaqus_handler.set_file(f'output_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
                         f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
 
 # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
 # as grid values. Those can be used to generate randomly lowered pore pressure values.
 void_ratio_import = abaqus_handler.engine.read_csv_file(
-        file=abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'),
+        file=abaqus_handler.get_file(f'output_file_{step_name}_void-ratio'),
         x_coord_row=0, y_coord_row=1, z_coord_row=2,
         values_row={'void_ratio': 3})
 
@@ -318,13 +318,15 @@ for x in range(0, number_of_steps):
 
     sim.engines['abaqus'].engine.clean_previous_files(previous_step['abaqus'].name, actual_step['abaqus'].path)
 
-    abaqus_handler.set_file(f'ouput_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
+    abaqus_handler.set_file(f'output_file_{step_name}_void-ratio', actual_step['abaqus'].get_path() /
                             f'{actual_step["abaqus"].get_prefix()}_void-ratio.csv')
 
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
     void_ratio_import = abaqus_handler.engine.read_csv_file(
-        abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'))
+        file=abaqus_handler.get_file(f'output_file_{step_name}_void-ratio'),
+        x_coord_row=0, y_coord_row=1, z_coord_row=2,
+        values_row={'void_ratio': 3})
 
     # Initiate a new temporary grid for imported pore pressure
     pore_pressure_import_grid = Grid()
