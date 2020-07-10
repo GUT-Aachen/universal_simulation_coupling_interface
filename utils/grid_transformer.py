@@ -136,19 +136,22 @@ class GridTransformer:
         grid_2_coordinates = self.grids[grid_name_2]['grid'].get_coordinates_array()
         grid_2_nodes = list(self.grids[grid_name_2]['grid'].nodes.keys())
 
-        x_min_1 = min(grid_1_coordinates)[0]
-        y_min_1 = min(grid_1_coordinates)[1]
-        z_min_1 = min(grid_1_coordinates)[2]
-        x_max_1 = max(grid_1_coordinates)[0]
-        y_max_1 = max(grid_1_coordinates)[1]
-        z_max_1 = max(grid_1_coordinates)[2]
+        # Numpy is used to get max and min values, because min() and max() deliver wrong values
+        x_min_1 = numpy.amin(a=grid_1_coordinates, axis=0)[0]
+        y_min_1 = numpy.amin(a=grid_1_coordinates, axis=0)[1]
+        z_min_1 = numpy.amin(a=grid_1_coordinates, axis=0)[2]
 
-        x_min_2 = min(grid_2_coordinates)[0]
-        y_min_2 = min(grid_2_coordinates)[1]
-        z_min_2 = min(grid_2_coordinates)[2]
-        x_max_2 = max(grid_2_coordinates)[0]
-        y_max_2 = max(grid_2_coordinates)[1]
-        z_max_2 = max(grid_2_coordinates)[2]
+        x_max_1 = numpy.amax(a=grid_1_coordinates, axis=0)[0]
+        y_max_1 = numpy.amax(a=grid_1_coordinates, axis=0)[1]
+        z_max_1 = numpy.amax(a=grid_1_coordinates, axis=0)[2]
+
+        x_min_2 = numpy.amin(a=grid_2_coordinates, axis=0)[0]
+        y_min_2 = numpy.amin(a=grid_2_coordinates, axis=0)[1]
+        z_min_2 = numpy.amin(a=grid_2_coordinates, axis=0)[2]
+
+        x_max_2 = numpy.amax(a=grid_2_coordinates, axis=0)[0]
+        y_max_2 = numpy.amax(a=grid_2_coordinates, axis=0)[1]
+        z_max_2 = numpy.amax(a=grid_2_coordinates, axis=0)[2]
 
         self.log.debug(f'Dimensions of {grid_name_1}:')
         self.log.debug(f'\t (x): {x_min_1} to {x_max_1}')
