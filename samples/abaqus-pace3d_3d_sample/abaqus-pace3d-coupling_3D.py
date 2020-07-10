@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 # Define a handler writing INFO messages or higher to sys.stderr
 consoleLogger = logging.StreamHandler(sys.stdout)
-consoleLogger.setLevel(logging.INFO)
+consoleLogger.setLevel(logging.DEBUG)
 # Set a format which is simpler for console use
 format_logger = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 consoleLogger.setFormatter(format_logger)
@@ -164,7 +164,9 @@ abaqus_handler.set_file(f'ouput_file_initial_void-ratio', actual_step['abaqus'].
 # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
 # as grid values. Those can be used to generate randomly lowered pore pressure values.
 void_ratio_import = abaqus_handler.engine.read_csv_file(
-    abaqus_handler.get_file(f'ouput_file_initial_void-ratio'))
+        file=abaqus_handler.get_file(f'ouput_file_{step_name}_void-ratio'),
+        x_coord_row=0, y_coord_row=1, z_coord_row=2,
+        values_row={'void_ratio': 3})
 
 # Initiate a new temporary grid for imported pore pressure
 pore_pressure_import_grid = Grid()
