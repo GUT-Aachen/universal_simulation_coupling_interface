@@ -21,6 +21,7 @@ root_directory = Path(Path().cwd())
 # Logfile name will be saved in 'root_directory'
 log_file_name = root_directory / 'logfile.log'
 
+# noinspection SpellCheckingInspection
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M',
@@ -132,9 +133,9 @@ abaqus_handler.engine.create_boundary_condition('PP', actual_step['abaqus'].grid
 # Prefix for output files consists of simulation name and current step name
 actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
 abaqus_handler.set_file(f'input_file_{step_name}',
-                        abaqus_handler.engine.write_input_file('PP',
-                                                               actual_step['abaqus'].get_prefix(),
-                                                               actual_step['abaqus'].get_path()))
+                        abaqus_handler.engine.write_input_file(set_work_name='PP',
+                                                               job_name=actual_step['abaqus'].get_prefix(),
+                                                               path=actual_step['abaqus'].get_path()))
 # In the bash file a couple of parameters can be set to run the simulation.
 abaqus_handler.set_file(f'bash_file_{step_name}',
                         abaqus_handler.engine.write_bash_file(
@@ -151,7 +152,7 @@ abaqus_handler.set_file(f'bash_file_{step_name}',
 # Start the simulation by calling a sub process
 sim.call_subprocess(abaqus_handler.get_file(f'bash_file_{step_name}'), actual_step['abaqus'].path)
 
-abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
+abaqus_handler.set_file(f'output_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
                         f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')
 
 # Next iteration steps
@@ -161,13 +162,15 @@ for x in range(0, number_of_steps):
 
     # Add a new step which is a copy of the previous step including all grids.
     actual_step = sim.add_iteration_step(step_name, copy_previous=True)
-    actual_step['abaqus'].set_step_folder(abaqus_handler.get_path('output'))
+    actual_step['abaqus'].create_step_folder(abaqus_handler.get_path('output'))
     previous_step = sim.get_previous_iterations()
 
     # Read pore pressure from previous ended simulation stored in **_pore-pressure.csv and store those in actual step
     # as grid values. Those can be used to generate randomly lowered pore pressure values.
     pore_pressure_import = abaqus_handler.engine.read_csv_file(
-        abaqus_handler.get_file(f'ouput_file_{previous_step["abaqus"].name}_pore-pressure'))
+        file=abaqus_handler.get_file(f'output_file_{previous_step["abaqus"].name}_pore-pressure'),
+        x_coord_row=0, y_coord_row=1, z_coord_row=2,
+        values_row={'pore_pressure': 3})
 
     # Initiate a new temporary grid for imported pore pressure
     pore_pressure_import_grid = Grid()
@@ -204,16 +207,19 @@ for x in range(0, number_of_steps):
     # Prepare input and batch file
     actual_step['abaqus'].set_prefix(f'{sim.name}_{step_name}')
     abaqus_handler.set_file(f'input_file_{step_name}',
-                            abaqus_handler.engine.write_input_file_restart('PP',
-                                                                           actual_step['abaqus'].get_prefix(),
-                                                                           actual_step['abaqus'].get_path(),
-                                                                           abaqus_handler.get_file(f'input_file_'
-                                                                                                   f'{previous_step["abaqus"].name}'),
-                                                                           actual_step['abaqus'].name,
-                                                                           previous_step["abaqus"].step_no + 1,
-                                                                           # Set to False if each sim should
-                                                                           # start at the very beginning
-                                                                           True))
+                            abaqus_handler.engine.write_input_file_restart(
+                                set_work_name='PP',
+                                job_name=actual_step['abaqus'].get_prefix(),
+                                path=actual_step['abaqus'].get_path(),
+                                previous_input_file=abaqus_handler.get_file(f'input_file_'
+                                                                            f'{previous_step["abaqus"].name}'),
+                                step_name=actual_step['abaqus'].name,
+                                restart_step=previous_step["abaqus"].step_no + 1,
+                                step_time_total=86400,
+                                step_time_increment_max=86400,
+                                # Set to False if each sim should
+                                # start at the very beginning
+                                resume=True))
 
     abaqus_handler.set_file(f'bash_file_{step_name}',
                             abaqus_handler.engine.write_bash_file(
@@ -238,5 +244,5 @@ for x in range(0, number_of_steps):
         previous_step['abaqus'].name,  # Name of previous step
         actual_step['abaqus'].path)  # Path to the actual output folder
 
-    abaqus_handler.set_file(f'ouput_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
+    abaqus_handler.set_file(f'output_file_{step_name}_pore-pressure', actual_step['abaqus'].get_path() /
                             f'{actual_step["abaqus"].get_prefix()}_pore-pressure.csv')

@@ -44,6 +44,8 @@
 Reach out to me at one of the following places!
 
 - Website at <a href="http://www.geotechnik.rwth-aachen.de/index.php?section=Biebricher_en" target="_blank">`www.geotechnik.rwth-aachen.de`</a>
+- <a href="https://orcid.org/0000-0001-9018-3485" target="_blank">ORCID</a>
+- <a href="https://www.xing.com/profile/SvenF_Biebricher" target="_blank">XING</a>
 
 ---
 
@@ -59,3 +61,4 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 [![NumPy](https://img.shields.io/static/v1?label=numpy&message=NumPy&color=blue&style=flat-square&logo=github)](https://github.com/numpy/numpy)
 [![SciPy](https://img.shields.io/static/v1?label=scipy&message=SciPy&color=blue&style=flat-square&logo=github)](https://github.com/scipy/scipy)
 [![matplotlib](https://img.shields.io/static/v1?label=matplotlib&message=matplotlib&color=blue&style=flat-square&logo=github)](https://github.com/matplotlib/matplotlib)
+[![HsKaIDM](https://img.shields.io/static/v1?label=HsKa-IDM&message=Pace3D&color=red&style=flat-square&logo=github)](https://www.hs-karlsruhe.de/en/research/hska-research-institutions/institute-for-digital-materials-science-idm/pace-3d-software/)

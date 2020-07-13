@@ -42,7 +42,7 @@ class AbaqusEngine:
         for text in self.placeholder_input_file.values():
             if text not in self.data:
                 log.warning(f'To modify or create additional input files minor placeholders have to be set in the '
-                            f'initial input file. Otherwise errors will occurre. The following placeholder is'
+                            f'initial input file. Otherwise errors will occur. The following placeholder is'
                             f' missing: {text}')
 
         self.node_set = {}
@@ -237,10 +237,8 @@ class AbaqusEngine:
         """
         self.log.info(f'Copying files from previous iteration "{prev_job_folder}" to current iterations output '
                       f'folder "{current_job_folder}".')
-        if not Path(current_job_folder).is_dir():
-            shutil.copytree(prev_job_folder, current_job_folder)
-        else:
-            self.log.error(f'{current_job_folder} already exists')
+        shutil.copytree(prev_job_folder, current_job_folder, dirs_exist_ok=True)
+
         return True
 
     def clean_previous_files(self, step_name, current_job_folder):
@@ -432,7 +430,9 @@ class AbaqusEngine:
             return 0
 
     def write_input_file_restart(self, set_work_name: str, job_name: str, path, previous_input_file: str,
-                                 step_name: str, restart_step: str, resume: bool = True):
+                                 step_name: str, restart_step: str,
+                                 step_time_total: int, step_time_increment_max: int,
+                                 resume: bool = True):
         """ This function modifies the previous input file and saves it in instances output folder with the name
         'job_name'.inp. This new file is a Abaqus restart input file.
 
@@ -443,6 +443,8 @@ class AbaqusEngine:
             previous_input_file: Path of the previous Abaqus input file
             step_name: name of the step
             restart_step: step from where to restart
+            step_time_total: total step time
+            step_time_increment_max: maximum time increment to simulate from 0 to total_step_time
             resume: Tells if the simulation shall start from the beginning or if the last step shall be resumed.
 
         Returns:
@@ -501,7 +503,8 @@ class AbaqusEngine:
             input_file_text.append(f'** \n')
             input_file_text.append(f'*Step, name={step_name}, nlgeom=NO, amplitude=RAMP, inc=10000 \n')
             input_file_text.append(f'*Soils, consolidation, end=PERIOD, utol=50000., creep=none \n')
-            input_file_text.append(f'6000., 43200., 1e-05, 6000., \n')
+            input_file_text.append(f'{step_time_increment_max}., {step_time_total}., 1e-05, '
+                                   f'{step_time_increment_max}., \n')
 
             self.log.debug(f'Step: Adding boundary conditions')
             input_file_text.append(f'** \n')
@@ -662,25 +665,41 @@ class AbaqusEngine:
         else:
             self.log.error('Using unknown system. No batch file builder available.')
 
-    def read_csv_file(self, file: str, delimiter: str = ','):
-        """ Function to read an csv-file-export from the Software Simulia Abaqus
+    def read_csv_file(self, file: str, delimiter: str = ',',
+                      x_coord_row: int = 0, y_coord_row: int = 1, z_coord_row: int = 2,
+                      values_row=None):
+        """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
-         Parameters:
-            file (str): filename including path
-            delimiter (str), optional: delimiter used in ascii file
+                 Parameters:
+                    file (str): filename including path
+                    delimiter (str), optional: delimiter used in ascii file
+                    x_coord_row (int), optional: row number for x-coordinate (default: 0)
+                    y_coord_row (int), optional: row number for y-coordinate (default: 1)
+                    z_coord_row (int), optional: row number for z-coordinate (default: 2)
+                    values_row (int), optional:  dictionary containing data set name and row number for values
+                                                (default: data:3)
 
-        Returns:
-            ndarray(dict)
-        """
+                Returns:
+                    ndarray(dict)
+                """
+
+        if values_row is None:
+            values_row = {'data': 3}
+
+        if not isinstance(values_row, dict):
+            self.log.error(f'Optional parameter values_row expects dictionary, is {type(values_row)}.')
+            return False
 
         try:
             file = Path(file)
+
+            # TODO Check if row fits to given data
 
             if not file.is_file():
                 self.log.error(f'File {file} not found.')
                 raise FileNotFoundError
 
-            self.log.info(f'Load Abaqus-Mesh-File: {file}')
+            self.log.info(f'Load Pace3D-Mesh-File: {file}')
 
             with file.open('r') as csv_file:
                 read_csv = csv.reader(csv_file, delimiter=delimiter)
@@ -689,14 +708,37 @@ class AbaqusEngine:
 
                 for row in read_csv:
                     try:
-                        if len(row) == 4:
-                            lines.append({'x_coordinate': float(row[0]),
-                                          'y_coordinate': float(row[1]),
-                                          'z_coordinate': float(row[2]),
-                                          'value': float(row[3])})
+                        # Check if actual row has the needed length
+                        if len(row) >= max(x_coord_row, y_coord_row, z_coord_row, max(values_row.values())) + 1:
+                            if z_coord_row != -1:
+                                x_coord = float(row[x_coord_row])
+                                y_coord = float(row[y_coord_row])
+                                z_coord = float(row[z_coord_row])
+                                values = {}
 
-                        if len(row) != 4:
-                            self.log.info(f'Empty row found or transition failed. Continue...')
+                                for key, item in values_row.items():
+                                    values[key] = float(row[item])
+
+                                lines.append({'x_coordinate': x_coord,
+                                              'y_coordinate': y_coord,
+                                              'z_coordinate': z_coord,
+                                              'values': values
+                                              })
+
+                            else:
+                                x_coord = float(row[x_coord_row])
+                                y_coord = float(row[y_coord_row])
+                                values = {}
+
+                                for key, item in values_row.items():
+                                    values[key] = float(row[item])
+
+                                lines.append({'x_coordinate': x_coord,
+                                              'y_coordinate': y_coord,
+                                              'values': values
+                                              })
+                        else:
+                            self.log.info(f'Empty or to short row found. Continue... [{row.__str__()}]')
 
                     except Exception as err:
                         self.log.info(f'Empty row found or transition failed. Continue... [{err}]')

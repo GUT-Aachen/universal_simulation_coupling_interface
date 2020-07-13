@@ -1,9 +1,16 @@
 import logging as log
+import numpy
 from utils.node import Node
 
 
 class Grid:
-    """This class represents a grid of nodes"""
+    """This class represents a grid of nodes, containing Node objects.
+
+    Conditions:
+        - A node exists just once regarding its coordinates and node number.
+        - A value must be stored in each single node. If a value is not available for a specific node it must be
+            set to None.
+    """
     def __init__(self):
         self.log = log.getLogger(self.__class__.__name__)
         self.nodes = {}
@@ -12,21 +19,43 @@ class Grid:
         return len(self.nodes)
 
     def __contains__(self, node_number):
-        if isinstance(node_number, int):
-            if node_number in self.nodes:
-                return True
-            else:
-                return False
+        """ Check if the grid contains a specific node, catch by node number.
+
+            Args:
+            node_number (int): Node number to be checked
+
+            Returns:
+                True if the node exists
+                False is the node does not exist
+        """
+
+        # Check input parameters
+        if not isinstance(node_number, int):
+            raise TypeError(f'Input parameter node_number must be of type integer, is {type(node_number)}.')
+
+        if node_number in self.nodes:
+            return True
         else:
-            self.log.error(f'Integer expected got {node_number}')
             return False
 
     def __getitem__(self, node_number):
-        try:
+        """ Get a Node object from Grid identified by its node number.
+
+        Args:
+            node_number (int): Node number to be checked
+
+        Returns:
+            Node object
+        """
+
+        # Check input parameters
+        if not isinstance(node_number, int):
+            raise TypeError(f'Input parameter node_number must be of type integer, is {type(node_number)}.')
+
+        if self.__contains__(node_number):
             return self.nodes[node_number]
-        except KeyError as err:
-            self.log.error(f'get_node() {err}')
-            return 0
+        else:
+            raise KeyError(f'The requested node does not exist. (node:{node_number})')
 
     def __str__(self):
         return f'{self.__class__.__name__}: number of nodes={len(self)}'
@@ -36,7 +65,7 @@ class Grid:
         Returns a list of available names for values in grid instance.
 
         Returns:
-            list: available value_names in grid
+            list: available value_names in Grid
         """
         str_output = []
 
@@ -47,6 +76,28 @@ class Grid:
 
         return str_output
 
+    def check_value_set_completeness(self, set_name):
+        """ Check if a value is stored for each node in the grid. Otherwise NaN will be stored in those nodes."""
+
+        self.log.debug(f'Check if values for {set_name} are set for any node in this grid.')
+
+        counter = 0
+
+        for node in self.nodes.values():
+            try:
+                if not node.values[set_name]:
+                    node.values[set_name] = numpy.nan
+                    counter += 1
+            except KeyError:
+                node.values[set_name] = numpy.nan
+
+        if not counter == 0:
+            self.log.debug(f'Check completed. Added NaN value for {counter} nodes.')
+        else:
+            self.log.debug(f'Check completed. Data valid.')
+
+        return True
+
     def get_empty_nodes(self):
         """ Getting a dictionary containing all nodes without values. This dict can be used to be filled with values
         and set back to the grid using the method .set_node_values().
@@ -54,24 +105,28 @@ class Grid:
         Returns:
             dictionary including all nodes as keys with None as value
         """
-        try:
+        if isinstance(self.nodes, dict) and len(self.nodes) > 0:
+            node_number = None
             node_number_dict = {}
 
-            for node_number in self.nodes.keys():
-                node_number_dict[node_number] = None
+            try:
+                for node_number in self.nodes.keys():
+                    node_number_dict[node_number] = None
 
-            if len(node_number_dict):
-                return node_number_dict
-            else:
-                return False
+                if len(node_number_dict):
+                    return node_number_dict
+                else:
+                    return False
 
-        except Exception as err:
-            log.error(f'An error occured while reading values: {err}')
-            return 0
+            except Exception as err:
+                raise Exception(f'An error occurred while reading values: {err}')
 
-        except KeyError as err:
-            log.error(f'Key {value_name} not found. {err}')
-            return 0
+            except KeyError as err:
+                raise KeyError(f'Key {node_number} not found. {err}')
+
+        else:
+            self.log.error('Grid is empty. No nodes found.')
+            return False
 
     def get_coordinates_array(self):
         """
@@ -86,6 +141,28 @@ class Grid:
             coordinates.append(node.coordinates)
 
         return coordinates
+
+    def get_list(self):
+        """
+        Returns a tuple of all saved grid data
+
+        Returns:
+            tuple
+        """
+
+        data = []
+
+        for node in self.nodes.values():
+            line = []
+            for row in node.coordinates:
+                line.append(row)
+
+            for item in node.values.values():
+                line.append(item)
+
+            data.append(line)
+
+        return data
 
     def set_node_values(self, value_name: str, node_dict: dict, ):
         """
@@ -107,6 +184,8 @@ class Grid:
         for node_number, value in node_dict.items():
             self.nodes[node_number].set_value(value_name, value)
 
+        self.check_value_set_completeness(value_name)
+
         return True
 
     def get_node_values(self, value_name: str):
@@ -126,7 +205,7 @@ class Grid:
             for node in self.nodes.values():
                 value = node.get_value(value_name)
                 if isinstance(value, int) or isinstance(value, float):
-                    node_value_dict[node.node_number] = node.get_value(value_name)
+                    node_value_dict[node.node_number] = value
 
             if len(node_value_dict):
                 return node_value_dict
@@ -134,7 +213,7 @@ class Grid:
                 return False
 
         except Exception as err:
-            log.error(f'An error occured while reading values: {err}')
+            log.error(f'An error occurred while reading values: {err}')
             return 0
 
         except KeyError as err:
@@ -207,6 +286,20 @@ class Grid:
             self.log.error(f'An error occurred while renaming values: {err}')
             return False
 
+    def z_rotation(self, angle=None, origin=None):
+        """Rotate grid by a given angle at a origin point.
+        Args:
+            angle: optional
+                sets the rotation angle
+            origin: optional
+                origin/fix point for rotation
+
+        Returns:
+            True on success
+        """
+        for node in self.nodes.values():
+            node.z_rotation(angle, origin)
+
     def initiate_grid(self, data_set, value_name=None, clear_first=True):
         """
         Initiate a new grid by transferring a dictionary including x/y/z-direction, values and optional node_number.
@@ -215,6 +308,7 @@ class Grid:
         Args:
             data_set: dict including grid information
             value_name: name of the values
+            clear_first: shall the grid be cleared before importing data set?
 
         Returns:
             boolean: true on success
@@ -224,7 +318,8 @@ class Grid:
             if isinstance(data_set, list):
 
                 if clear_first and len(self.nodes) > 0:
-                    self.log.warning(f'Grid is not empty ({len(self.nodes)}). Grid will be vanished for initialization.')
+                    self.log.warning(f'Grid is not empty ({len(self.nodes)}). '
+                                     f'Grid will be vanished for initialization.')
                     self.nodes = {}
 
                 i = -1
@@ -254,6 +349,14 @@ class Grid:
                         else:
                             input_dict['values'] = {'data': row['value']}
 
+                    if 'values' in row:
+                        if isinstance(row['values'], dict):
+                            input_dict['values'] = row['values']
+
+                        else:
+                            self.log.warning(f'Input dictionary pretends to include a dictionary for values, but '
+                                             f'found {type(row["values"])}.')
+
                     if 'node_number' in row:
                         input_dict['node_number'] = row['node_number']
                     else:
@@ -262,11 +365,12 @@ class Grid:
                     self.add_node(**input_dict)
 
             self.log.info(f'Added {len(data_set)} nodes to the grid.')
+
             return True
 
         except Exception as err:
             self.log.error(f'An error occurred while adding nodes to the grid. [{err}]')
-            return False
+            raise Exception
 
     def coordinates_exist(self, x_coordinate, y_coordinate, z_coordinate=None):
         """
@@ -312,7 +416,7 @@ class Grid:
                     return node_number
         return 0
 
-    def validation_check(self):
+    def grid_validation_check(self):
         """
         Checking the grid for any issues like:
             1. Using the same coordinates in two different nodes

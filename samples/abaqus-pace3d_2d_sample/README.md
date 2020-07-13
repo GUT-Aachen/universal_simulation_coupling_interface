@@ -39,7 +39,7 @@ Some Pace3D simulation stuff can/will be done next and a pore pressure distribut
 This distribution is loaded into the Grid object.  
 Here ends the initial iteration step.
 
-The upcoming steps (in this case only one) are eewonjiewonifew:
+The upcoming steps (in this case only one) are establishes as follows:
 In General a new step is created in the SimulationHandler object with a specific name, here it is step_x.
 The pore pressure results from the Pace3D simulation, already stored in the Pace3D engine's Grid object will be transformed to Abaqus engine's Grid object.
 This distribution will be used to create new pore pressure boundary conditions for the Abaqus simulation.
@@ -81,9 +81,9 @@ Here you can see a summary of the two iteration steps and the changing pore pres
  10. Set name of part to be modified in Abaqus engine
  11. Prepare first step: set step name; add step to Simulation Handler object; copy grid from Abaqus input file into Grid object; import initial Pace3D pore pressure distribution into Grid object and transform to Abaqus Grid object; create initial boundary conditions for pore pressure in Abaqus with distribution store in Abaqus Grid object; create input file; create bash file;
  12. Run initial iteration step of Abaqus simulation
- 13. Run initial iterarion step of Pace3D simulation
+ 13. Run initial iteration step of Pace3D simulation
  14. Iterate through following steps: 
  15. General: set step name; add step to Simulation Handler object; 
  16. Abaqus: read pore pressure from previous Pace3D step, transform and store for new step; create boundary conditions for input file; create Abaqus input file; create bash file; run simulation step; read and store void ratio into Abaqus engine's Grid object;
- 17. Pace3D: read void ratio from previous Pace3D step, transform and store for new step; do some stoff; run simulation step; read and store pore pressure into Pace3D engine's Grid object;
+ 17. Pace3D: read void ratio from previous Pace3D step, transform and store for new step; do some stuff; run simulation step; read and store pore pressure into Pace3D engine's Grid object;
 

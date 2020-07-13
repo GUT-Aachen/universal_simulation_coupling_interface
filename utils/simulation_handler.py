@@ -13,25 +13,33 @@ class SimulationHandler:
     the connected iteration steps in the different engines are stored. While the universal EngineHandler class handles
     one engine each instance, the SimulationHandler works as a communicator in between the different engines.
     """
+
     def __init__(self, name):
+        """
+        Args:
+            name (str): specific name of this simulation handler
+        """
         self.log = log.getLogger(self.__class__.__name__)
 
-        self.engines = {}
+        # Check input parameters
+        if not isinstance(name, str):
+            raise TypeError(f'Input parameter name must be of type string is {type(name)}.')
         self.name = name
+
+        self.engines = {}
         self.paths = {}
-
-        self.log.debug(f'Initialized simulation handler for {self.name}')
-
         self.iterations = []
 
-    def add_iteration_step(self, step_name, copy_previous=False):
+        self.log.debug(f'Initialized simulation handler. (name: {self.name})')
+
+    def add_iteration_step(self, step_name, copy_previous: bool = False):
         """ Adding an iteration step to the simulation. This method is used to add an iteration into each engine
         simultaneously. It is also possible to add an iteration step into each engine separately, but not with
         this method.
 
         Args:
-            step_name: name of the iteration to be added
-            copy_previous: set true to make a (deep)copy of the previous step, keeping grid information
+            step_name (str): name of the iteration to be added
+            copy_previous (bool,optional): set true to make a (deep)copy of the previous step, keeping grid information
                             and values
 
         Returns:
@@ -39,8 +47,7 @@ class SimulationHandler:
         """
 
         if len(self.engines) == 0:
-            self.log.error(f'Before adding an iteration step, engines must be initialized!')
-            raise ValueError
+            raise ValueError(f'Before adding an iteration step, engines must be initialized! Use add_engine().')
 
         steps = {}
 
@@ -48,15 +55,38 @@ class SimulationHandler:
         for engine in self.engines.values():
             steps[engine.engine_name] = engine.add_iteration_step(step_name, copy_previous)
 
+        # Append the name of the added iteration step "step_name" to the list of iterations "self.iterations"
         self.iterations.append(step_name)
 
         return steps
+
+    def clear_old_iterations(self):
+        """
+        Delete old iterations stored in each EngineHandler object to save memory. The actual and the iteration before
+        are not touched. If there are less than two iterations nothing will be changed and False will be returned.
+
+        Returns:
+            bool: True on success, else False
+        """
+
+        if len(self.iterations) > 2:
+
+            # Iterate through the initialized engines and get iteration step
+            for engine in self.engines.values():
+                engine.iterations[len(engine.iterations) - 3] = None
+
+            return True
+
+        else:
+            self.log.info(f'Only {len(self.iterations)} are available in this instance. clear_old_iterations() needs at'
+                          f'least three available iterations.')
+            return False
 
     def get_current_iterations(self):
         """ Get a dictionary of the current iteration step of all engines.
 
         Returns:
-            Dictionary of steps added to the different engines. Key is engine name, value is added iteration step
+            Dictionary of steps added to the different engines. Key is engine name, value is added iteration step.
         """
 
         if len(self.iterations) > 0:
@@ -70,8 +100,7 @@ class SimulationHandler:
             return steps
 
         else:
-            self.log.error(f'No iterations available in this simulation.')
-            raise IndexError
+            raise IndexError(f'No iterations available in this simulation.')
 
     def get_previous_iterations(self):
         """ Get a dictionary of the previous iteration step of all engines.
@@ -97,83 +126,92 @@ class SimulationHandler:
 
     def add_engine(self, engine_name):
         """ Add a new engine to the SimulationHandler instance. A new engine will be added by the universal
-        EngineHandler class. The initialization by engine_name (e.g. abaqus) only leads to a new entry in the engine
+        EngineHandler class. The initialization by engine_name (e.g. Abaqus) only leads to a new entry in the engine
         listing .engines in this instance. The new instance of EngineHandler has to be initialized by
         EngineHandler.init_engine().
 
         Args:
-            engine_name: name of the engine used by the EngineHandler class to identify the engine
+            engine_name (str): name of the engine used by the EngineHandler class to identify the engine
 
         Returns:
             EngineHandler instance of the added engine
         """
 
+        # Check input parameters
+        if not isinstance(engine_name, str):
+            raise TypeError(f'Input parameter engine_name must be of type string is {type(engine_name)}.')
+        elif len(self.engines) > 0:  # Check if this engine name is already in use
+            for key in self.engines.keys():
+                if key == engine_name:
+                    raise NameError(f'An engine with the given name already exists. ({engine_name})')
+
+        # Initialize new EngineHandler object
         engine = EnginesHandler(engine_name)
+
         if engine:
             self.engines[engine_name] = engine
             return self.engines[engine_name]
 
         else:
-            self.log.error(f'Error on adding EnginesHandler for {engine_name}.')
-            raise NameError
+            raise NameError(f'Error on adding EnginesHandler for {engine_name}.')
 
     def set_path(self, path_name, path, create_missing=True, cleanup=False):
         """ Set a global path like "root", "output" or "input". With the path_name the kind of path is defined. The
-        used path is a String converted to a Path class. The optional parameter create_missing includes the option
+        used path is a string converted to a Path class. The optional parameter create_missing includes the option
         to create the directories as they are not existing. The cleanup parameter can be set, but has only impact on the
         setting of the output directory, to prevent input or root accidentally directory from data loss.
 
         Args:
-            path_name: identifier of the path
-            path: path to directory absolute or relative
-            create_missing: set true (default) to create missing folders
-            cleanup: set true to clean recursively the added path from included files or directories
+            path_name (str): identifier of the path
+            path (Path/str): path to directory absolute or relative
+            create_missing (bool, optional): set true (default) to create missing folders
+            cleanup (bool, optional): set true to clean recursively the added path from included files or directories
 
         Returns:
             boolean: True on success
         """
 
+        # Check input parameters
+        if not isinstance(path_name, str):
+            raise TypeError(f'Input parameter path_name must be of type string is {type(path_name)}.')
+
         # Check if path_name is valid
         valid_names = ['output', 'input', 'root']
         if path_name not in valid_names:
-            self.log.error(f'{path_name} is not part of {valid_names}')
-            raise NameError
+            raise NameError(f'{path_name} is not part of {valid_names}')
 
         try:
             path = Path(path)
 
             # Check if path is a file or folder
             if path.is_file():
-                self.log.error(f'Given path is a file. Path empty excepted.')
-                raise TypeError
+                raise TypeError(f'Given path is a file. Path excepted. ({path})')
 
             # Check if path exists
             if not path.is_dir():
-
+                # Path does not exist
                 if create_missing:
                     if path.mkdir():
-                        self.log.info(f'Path {path} generated.')
+                        self.log.debug(f'Path generated successfully. ({path})')
                         self.paths[path_name] = path
-                        self.log.debug(f'Checked and added output_path {path}')
+                        self.log.info(f'Checked and added path. ({path})')
                         return True
 
                     else:
                         # Another try
                         if path.mkdir():
-                            self.log.info(f'Path {path} generated.')
+                            self.log.debug(f'Path generated successfully. ({path})')
                             self.paths[path_name] = path
-                            self.log.debug(f'Checked and added output_path {path}')
+                            self.log.info(f'Checked and added path. ({path})')
                             return True
                         else:
-                            self.log.error(f'Not able to create output_path {path}')
-                            raise PermissionError
+                            raise PermissionError(f'Not able to create path. ({path})')
                 else:
-                    self.log.error(f'Path {path} does not exist. If you want to create the path automatically use '
-                                   f'the create_missing=True (default) option.')
-                    raise NotADirectoryError
+                    raise NotADirectoryError(f'Path {path} does not exist. If you want to create the path '
+                                             f'automatically use the create_missing=True (default) option.')
 
             else:
-                # Check if path is empty
+                # Path already exists, check if path (only output) is empty
                 if not any(path.iterdir()) and path_name == 'output':
                     if not cleanup:
                         self.log.warning(
@@ -189,8 +227,7 @@ class SimulationHandler:
                 return True
 
         except FileNotFoundError as err:
-            self.log.error(f'Error occured while setting path {path} as output_path. {err}')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Error occurred while setting path {path} as output_path. {err}')
 
     def set_root_path(self, root_path, create_missing=True):
         """ Set the root path of the simulation and in addition the input and output path by standard values. To create
@@ -217,8 +254,7 @@ class SimulationHandler:
             if self.set_path('input', root_path / input_sub_folder, create_missing, False):
                 self.log.debug(f'Input path set for simulation {self.name} to {self.get_input_path()}')
         else:
-            self.log.error('Error while setting root path.')
-            raise OSError
+            raise OSError('Error while setting root path.')
 
         return True
 
@@ -239,65 +275,71 @@ class SimulationHandler:
 
     def output_path_cleanup(self, recreate_missing=True):
         """
-        Cleaning up the output_path means deleting all files and subfolder. Folders saved in engines.self.path
+        Cleaning up the output_path means deleting all files and sub folder. Folders saved in engines.self.path
         will be checked and if needed and parameter recreate_missing is set, be recreated. Files will not be checked.
 
         Args:s
-            recreate_missing (bool): If True, probably deleted folders will be recreated.
+            recreate_missing (bool, optional): If True, probably deleted sub folders will be recreated.
 
         Returns:
-            boolean: true on success
+            boolean: True on success
         """
+
+        # Check input parameters
+        if not isinstance(recreate_missing, bool):
+            raise TypeError(f'Input parameter recreate_missing must be of type bool is {type(recreate_missing)}.')
 
         path = self.paths['output']
 
-        try:
-            if path.is_file():
-                self.log.error(f'Given path is a file. Expected path.')
-                raise TypeError
+        # Remove and recreate path
+        if path.is_dir():
+            shutil.rmtree(path)
+            time.sleep(0.5)
+            path.mkdir()
+            self.log.info(f'Cleaned up output path. ({path})')
+        else:
+            raise FileNotFoundError(f'Output path is not a folder. ({path})')
 
-            # Remove and recreate path
-            if path.is_dir():
-                shutil.rmtree(path)
-                time.sleep(0.5)
-                path.mkdir()
-                self.log.info(f'Cleaned up output_path {path}')
-            # FIXME Recreate only concerned folder
-            if recreate_missing:
-                # Check if all paths in self.engines are existing, otherwise create.
-                for engine in self.engines.values():
-                    for name, path in engine.paths.items():
-                        if not path.is_dir():
-                            time.sleep(0.5)
-                            path.mkdir()
-                            self.log.info(f'Recreated path for engine {engine.engine_name}: {name} at {path}')
+        if recreate_missing:
+            # Check if all paths in self.engines are existing, otherwise create.
+            for engine in self.engines.values():
+                for name, path in engine.paths.items():
+                    if not path.is_dir():
+                        time.sleep(0.5)
+                        path.mkdir()
+                        self.log.info(f'Recreated path(s) for engine {engine.engine_name}: {name} at {path}')
 
-            return True
-
-        except Exception:
-            self.log.error(f'An error occured while cleaning up output_path {path}')
-            raise Exception
+        return True
 
     def call_subprocess(self, batch_file, cwd_folder):
         """ Calling in the engines created batch files to run the simulations. The batch files will be ran in the
          shell and the progress can be followed up at the run-terminal of python, but is not stored in the log file.
 
         Args:
-            batch_file: path to the batch-file as Path or String as absolute path
-            cwd_folder: switch to directory before batch file execution
+            batch_file (str/path): path to the batch-file as Path or String as absolute path
+            cwd_folder (str/path: switch to directory before batch file execution
 
         Returns:
-            boolean: True on success
+            bool: True on success
         """
-        self.log.info(f'Start subprocess in {batch_file} executed in {cwd_folder}')
+
+        # Check input parameters
+        if not isinstance(batch_file, str) and not isinstance(batch_file, Path):
+            raise TypeError(f'Input parameter batch_file must be of type string or Path is {type(batch_file)}.')
+        if not isinstance(cwd_folder, str) and not isinstance(cwd_folder, Path):
+            raise TypeError(f'Input parameter cwd_folder must be of type string or Path is {type(cwd_folder)}.')
 
         batch_file = Path(batch_file)
         folder = Path(cwd_folder)
 
         if batch_file.is_file() and folder.is_dir():
+            self.log.info(f'Start subprocess in {batch_file} executed in {cwd_folder}')
+
             subprocess.call(str(batch_file), shell=True, cwd=str(cwd_folder))  # Start simulation in shell
+
             self.log.debug('End of subprocess')
+
             return True
         else:
-            self.log.error(f'Batch-file or execution-folder do not exist. batch-file {batch_file}; execution-folder {folder}')
-            raise FileNotFoundError
+            raise FileNotFoundError(f'Batch-file or execution-folder do not exist. batch-file: ({batch_file}; '
+                                    f'execution-folder: {folder})')
