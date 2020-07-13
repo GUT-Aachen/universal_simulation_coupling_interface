@@ -57,7 +57,7 @@ class Node:
         else:
             return self.x_coordinate, self.y_coordinate, 0
 
-    def z_rotation(self, angle=None, origin: dict = None):
+    def z_rotation(self, angle: float = None, origin: dict = None):
         """Rotate this node by a given angle at a origin point
         Args:
             angle (float/int, optional): sets the rotation angle in degrees (0 to 360°)
@@ -71,11 +71,12 @@ class Node:
         if not isinstance(angle, int) and not isinstance(angle, float) and angle is not None:
             raise TypeError(f'Input parameter angle must be of type float or integer is {type(angle)}.')
         elif angle < 0 or angle > 360:
-            raise ValueError(f'Input parameter angle must fulfull 0 < angle < 360.')
+            raise ValueError(f'Input parameter angle must full 0 < angle < 360.')
 
         if not isinstance(origin, dict) and origin is not None:
             raise TypeError(f'Input parameter origin must be of type dict is {type(origin)}.')
-        else:
+
+        elif isinstance(origin, dict):
             # Check if keys for x and y coordinates are given
             x_coordinate_exists = False
             y_coordinate_exists = False
@@ -91,15 +92,15 @@ class Node:
 
         if not angle or not origin:
             raise ValueError(f'An rotation angle and an origin must be defined.')
+        elif isinstance(angle, float):
+            x = self.x_coordinate - origin['x_coordinate']
+            y = self.y_coordinate - origin['y_coordinate']
 
-        x = self.x_coordinate - origin['x_coordinate']
-        y = self.y_coordinate - origin['y_coordinate']
+            x_rotated = x * math.cos(angle) + y * math.sin(angle)
+            y_rotated = x * -math.sin(angle) + y * math.cos(angle)
 
-        x_rotated = x * math.cos(angle) + y * math.sin(angle)
-        y_rotated = x * -math.sin(angle) + y * math.cos(angle)
-
-        self.x_coordinate = x_rotated + origin['x_coordinate']
-        self.y_coordinate = y_rotated + origin['y_coordinate']
+            self.x_coordinate = x_rotated + origin['x_coordinate']
+            self.y_coordinate = y_rotated + origin['y_coordinate']
 
         return True
 
