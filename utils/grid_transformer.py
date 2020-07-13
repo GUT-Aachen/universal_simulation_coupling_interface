@@ -311,6 +311,8 @@ class GridTransformer:
                 # Calculating of the weighted average
                 # Take into account if a value has the distance of 0. In this case this particular value should be
                 # used instead of creating a weighted average.
+                result = None
+
                 for item in node_dict:
                     distance = item['distance']
                     node_number = item['node_number']

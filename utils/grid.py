@@ -104,24 +104,28 @@ class Grid:
         Returns:
             dictionary including all nodes as keys with None as value
         """
-        try:
+        if isinstance(self.nodes, dict) and len(self.nodes) > 0:
+            node_number = None
             node_number_dict = {}
 
-            for node_number in self.nodes.keys():
-                node_number_dict[node_number] = None
+            try:
+                for node_number in self.nodes.keys():
+                    node_number_dict[node_number] = None
 
-            if len(node_number_dict):
-                return node_number_dict
-            else:
-                return False
+                if len(node_number_dict):
+                    return node_number_dict
+                else:
+                    return False
 
-        except Exception as err:
-            log.error(f'An error occurred while reading values: {err}')
-            return 0
+            except Exception as err:
+                raise Exception(f'An error occurred while reading values: {err}')
 
-        except KeyError as err:
-            log.error(f'Key {node_number} not found. {err}')
-            return 0
+            except KeyError as err:
+                raise KeyError(f'Key {node_number} not found. {err}')
+
+        else:
+            self.log.error('Grid is empty. No nodes found.')
+            return False
 
     def get_coordinates_array(self):
         """
