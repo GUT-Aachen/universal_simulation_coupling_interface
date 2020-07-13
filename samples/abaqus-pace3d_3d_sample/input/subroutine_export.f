@@ -81,7 +81,7 @@
 			open(unit=csvOutUnitVoidR, file=csvOutFileVoidR, status='unknown',
 &						form='formatted')
 
-			! Check if the file was loaded succesfully
+			! Check if the file was loaded successfully
 			INQUIRE(csvOutUnitVoidR, openED=ISopen)
 			if (ISopen) then
 					call stdb_AbqERR(1, 'Exportfile (%S) opened succesfully. '

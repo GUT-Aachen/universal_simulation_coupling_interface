@@ -149,7 +149,7 @@ class EnginesHandler:
 
     def path_cleanup(self, path_name, recreate_missing=True):
         """
-        Cleaning up the given path means deleting all files and subfolder. Folders saved in self.path will be checked
+        Cleaning up the given path means deleting all files and sub folder. Folders saved in self.path will be checked
         and if needed and parameter recreate_missing is set be recreated. No longer existing files in self.files will
         be deleted from dictionary.
 

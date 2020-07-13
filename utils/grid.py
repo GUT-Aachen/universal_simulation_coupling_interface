@@ -19,7 +19,7 @@ class Grid:
         return len(self.nodes)
 
     def __contains__(self, node_number):
-        """ Check if the grid contains a specific node, catched by node number.
+        """ Check if the grid contains a specific node, catch by node number.
 
             Args:
             node_number (int): Node number to be checked
@@ -213,7 +213,7 @@ class Grid:
                 return False
 
         except Exception as err:
-            log.error(f'An error occured while reading values: {err}')
+            log.error(f'An error occurred while reading values: {err}')
             return 0
 
         except KeyError as err:

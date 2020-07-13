@@ -232,7 +232,7 @@ class GridTransformer:
                         if distance > distance_max:
                             continue
 
-                    # Append node and distance to list in dictionaryDiferantiate
+                    # Append node and distance to list in dictionary
                     transform_dict[grid_2_nodes[i]].append({'node_number': node, 'distance': distance})
             else:  # A couple of neighbors have been taken into account
                 node = grid_1_nodes[points[i] - 1]
@@ -263,7 +263,7 @@ class GridTransformer:
 
     def transition(self, src_grid_name, value_name, target_grid_name):
         """
-        The values (value_name) of the source grid (src_grid_name) are transfered to the target grid
+        The values (value_name) of the source grid (src_grid_name) are transferred to the target grid
         (target_grid_name). For the transfer a modified nearest neighbor approach is used (see
         .find_nearest_neighbors()). The relevant neighbors and their distance to the corresponding node are stored.
         This function used the distance from the node to calculate a weighted average.
