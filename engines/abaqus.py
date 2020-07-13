@@ -666,7 +666,7 @@ class AbaqusEngine:
 
     def read_csv_file(self, file: str, delimiter: str = ',',
                       x_coord_row: int = 0, y_coord_row: int = 1, z_coord_row: int = 2,
-                      values_row: dict = {'data': 3}):
+                      values_row=None):
         """ Function to read an dat-file-export from the Software Pace3D from IDM HS Karlsruhe
 
                  Parameters:
@@ -681,6 +681,9 @@ class AbaqusEngine:
                 Returns:
                     ndarray(dict)
                 """
+
+        if values_row is None:
+            values_row = {'data': 3}
 
         if not isinstance(values_row, dict):
             self.log.error(f'Optional parameter values_row expects dictionary, is {type(values_row)}.')
