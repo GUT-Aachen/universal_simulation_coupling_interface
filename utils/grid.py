@@ -88,8 +88,9 @@ class Grid:
                 if not node.values[set_name]:
                     node.values[set_name] = numpy.nan
                     counter += 1
-            except Exception:
+            except KeyError:
                 node.values[set_name] = numpy.nan
+
         if not counter == 0:
             self.log.debug(f'Check completed. Added NaN value for {counter} nodes.')
         else:
