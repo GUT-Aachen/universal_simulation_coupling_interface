@@ -313,7 +313,8 @@ class Grid:
             if isinstance(data_set, list):
 
                 if clear_first and len(self.nodes) > 0:
-                    self.log.warning(f'Grid is not empty ({len(self.nodes)}). Grid will be vanished for initialization.')
+                    self.log.warning(f'Grid is not empty ({len(self.nodes)}). '
+                                     f'Grid will be vanished for initialization.')
                     self.nodes = {}
 
                 i = -1

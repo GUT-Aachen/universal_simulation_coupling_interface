@@ -25,7 +25,8 @@ class Node:
         if not isinstance(y_coordinate, int) and not isinstance(y_coordinate, float):
             raise TypeError(f'Input parameter y_coordinate must be of type float or integer is {type(y_coordinate)}.')
         if not isinstance(z_coordinate, int) and not isinstance(z_coordinate, float) and z_coordinate is not None:
-            raise TypeError(f'Input parameter z_coordinate must be of type float, integer or left empty is {type(z_coordinate)}.')
+            raise TypeError(f'Input parameter z_coordinate must be of type float, integer or left empty '
+                            f'is {type(z_coordinate)}.')
 
         self.node_number = node_number
         self.x_coordinate = x_coordinate
