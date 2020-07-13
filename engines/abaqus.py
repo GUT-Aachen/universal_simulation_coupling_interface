@@ -42,7 +42,7 @@ class AbaqusEngine:
         for text in self.placeholder_input_file.values():
             if text not in self.data:
                 log.warning(f'To modify or create additional input files minor placeholders have to be set in the '
-                            f'initial input file. Otherwise errors will occurre. The following placeholder is'
+                            f'initial input file. Otherwise errors will occur. The following placeholder is'
                             f' missing: {text}')
 
         self.node_set = {}
