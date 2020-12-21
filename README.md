@@ -1,8 +1,8 @@
 # Universal Simulation Coupling Interface
 
-![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)
-![License: GNU](https://img.shields.io/github/release-date/froido/universal_simulation_coupling_interface?style=flat-square)
-![License: GNU](https://img.shields.io/github/v/release/froido/universal_simulation_coupling_interface?style=flat-square)
+[![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)](LICENSE.md)
+[![Release: Date](https://img.shields.io/github/release-date/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases)
+[![Release: Version](https://img.shields.io/github/v/release/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases)
 ![DOI](https://img.shields.io/static/v1?label=DOI&message=DOIDOIDOI&color=blue&style=flat-square)
 
 > This framework can be used to partially couple two or more simulations. 
@@ -24,18 +24,19 @@
 [![matplotlib](https://img.shields.io/static/v1?label=matplotlib&message=matplotlib&color=blue&style=flat-square&logo=github)](https://github.com/matplotlib/matplotlib)
 
  - At least two different simulation software with a known command line interface
- - Developement of an engine to tell USCI how to communicate and exchange data with simulation software
+ - Development of an engine to tell USCI how to communicate and exchange data with simulation software
  
 ---
 
 ## Setup
  - Check for python package dependencies
- - Download latest release of USCI to your local machine
+ - Download the latest release of USCI to your local machine
  - Construct your own individual simulation workflow or try one of the [samples](samples)
   
 ---
 
-## Usage (pending)
+## Usage
+See [samples](samples)
 
 ---
 
@@ -51,7 +52,7 @@ Reach out to me at one of the following places!
 
 ## License
 
-![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)
+[![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)](LICENSE.md)
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details
 
 ---
