@@ -1,9 +1,9 @@
 # Universal Simulation Coupling Interface
 
-[![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)](LICENSE.md)
-[![Release: Date](https://img.shields.io/github/release-date/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases)
-[![Release: Version](https://img.shields.io/github/v/release/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases)
-![DOI](https://img.shields.io/static/v1?label=DOI&message=DOIDOIDOI&color=blue&style=flat-square)
+[![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)](LICENSE.md) 
+[![Release: Date](https://img.shields.io/github/release-date/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases) 
+[![Release: Version](https://img.shields.io/github/v/release/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases) 
+[![DOI](https://zenodo.org/badge/206265040.svg)](https://zenodo.org/badge/latestdoi/206265040)
 
 > This framework can be used to partially couple two or more simulations. 
   This interface manages the workflow of the simulation coupling, as it exchanges data between grids or meshes at each iteration and modifies the data to fit manufacturer specifications. 
