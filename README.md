@@ -1,8 +1,8 @@
 # Universal Simulation Coupling Interface
 
 [![License: GNU](https://img.shields.io/github/license/froido/universal_simulation_coupling_interface?style=flat-square)](LICENSE.md) 
-[![Release: Date](https://img.shields.io/github/release-date/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases) 
-[![Release: Version](https://img.shields.io/github/v/release/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases) 
+[![Release: Date](https://img.shields.io/github/release-date-pre/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases) 
+[![Release: Version](https://img.shields.io/github/v/release-pre/froido/universal_simulation_coupling_interface?style=flat-square)](https://github.com/froido/universal_simulation_coupling_interface/releases) 
 [![DOI](https://zenodo.org/badge/206265040.svg)](https://zenodo.org/badge/latestdoi/206265040)
 
 > This framework can be used to partially couple two or more simulations. 
